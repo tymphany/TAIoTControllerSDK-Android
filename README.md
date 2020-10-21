@@ -1,17 +1,35 @@
-# SmartSDK-Android-Document
-This is the Tymphany SmartSDK document for Android, based on the provided IoTControllerSDK source code from Qualcomm. The document for the SDK is based on the IoTSysManager class and the classes below the Onboarding package, and add the bleonboarding package to control wifi BLE onboarding, which are encapsulated in the App layer. 
+# TAIoTControllerSDK
+This is the Tymphany smart audio SDK for Android, based on the provided IoTControllerSDK by Qualcomm, to communicate with Tymphany SmartSDK on QCS40X platform.
 
-## How to open document
-The Tymphany Android SmartSDK document is generated in html. To open the document, please **download this repo** and find source file index.html under resource folder /docs, **double click file index.html** will open document in web browser.
 
-## SDK Document Description
-* The SDK document consists of two parts, wifi BLE onboarding and IoTSysManager. Both of these parts are under the manager package, and this part is in the App layer.
+## Requirements
 
-* Wifi BLE Onboarding doesn't involve Iotivity.The IoTSysManager class is related to the IoTDevice and IoTService in the IOTControllerSDK.IoTSysManager encapsulates many methods from IoTDevice. Only the methods in IoTSysManager need to be used during the development process. If there are any shortcomings or methods need to be added later, please check if the IoTDevice class is supported.
+| TAIoTControllerSDK Version | minSdkVersion  |                            Notes                                   |
+|:--------------------:|:----------------------------:|:-------------------------------------------------------------------------:|
+| 0.x | 25 | java version(1.8) , gradle version(5.1.1) |
 
-* There should be an instance of the IoTService in each application that needs to be initialized when the application is started. See the Reference App for details
 
-* Because FW implement wifi onboarding via BLE. The project on app layer below manager package where create a bleonbarding package. This package has BleManager class to provide use.
+## How to integrate the TAIoTController SDK
+### Step 1.Add the JitPack repository to your build file
+#### Add it in your root build.gradle at the end of repositories:
+      allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+  
+### Step 2.Add the dependency in your app build.gradle
+	dependencies {
+	        implementation 'com.github.tymphany:TAIoTControllerSDK-Android:0.0.1'
+	}
+  
+#### Dependency information
+- Group: com.github.Username
+- Artifact: Repository Name
+- Version: Release tag
+  
+**[Notes]  Every time you update the SDK, you just need to update released tag**
 
 
 ## Communication
@@ -174,12 +192,11 @@ IoTSysManager.init(this);
 ```
 ##### and so on
 
-#### How to integrate the IoTController SDK
-##### Because integration is still project dependent now. You can refer to how it's written in gradle on our demo app. Next I'll put it on gradle's remote dependencies, similar to okhttp 
-
-
 ## Author
 
 RockyPeng, Rocky.Peng@tymphany.com
 
+## License
+
+Contact Tymphany for more info
 
