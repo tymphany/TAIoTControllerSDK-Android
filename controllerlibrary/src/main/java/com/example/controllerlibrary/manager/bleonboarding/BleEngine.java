@@ -14,12 +14,12 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.text.TextUtils;
 
-
 import com.example.controllerlibrary.manager.bleonboarding.bean.TASystem;
 import com.example.controllerlibrary.manager.bleonboarding.bean.WifiBean;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 
@@ -28,7 +28,6 @@ public class BleEngine {
     private BluetoothAdapter mBluetoothAdapter;
     private Context mContext;
     private BluetoothGatt mBluetoothGatt = null;
-    private ArrayList<WifiBean> wifiList = null;
     private static UpdatesDelegate mUpdatesDelegate;
     private Handler workHandler = null;
 
@@ -78,21 +77,15 @@ public class BleEngine {
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
             if(status == BluetoothGatt.GATT_SUCCESS){
-                registerListener(true, Constant.ConnectedStatusCharacteristicUUID);
-                String data = new String(characteristic.getValue());
-                String[] strWifiList = data.split("/");
-                wifiList = new ArrayList<>();
-                for(int i = 0; i < strWifiList.length; i++ ){
-                    WifiBean wifiBean = new WifiBean();
-                    wifiBean.setSSid(strWifiList[i]);
-                    wifiList.add(wifiBean);
+                byte[] data = characteristic.getValue();
+                int value = (int)data[0];
+                if(value == Constant.WIFI_DISCONNECT){
+                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_DISCONNECT);
+                }else if(value == Constant.WIFI_CONNECTING){
+                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTING);
+                }else if(value == Constant.WIFI_CONNECTED){
+                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTED);
                 }
-                workHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                      mUpdatesDelegate.didUpdateWifiList(wifiList);
-                    }
-                },200L);
             }
 
         }
@@ -108,17 +101,34 @@ public class BleEngine {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            if(characteristic.getUuid().equals(UUID.fromString(Constant.ScanRequestCharacteristicUUID))){
+            registerListener(true, Constant.ConnectCharacteristicUUID);
+            if(characteristic.getUuid().equals(UUID.fromString(Constant.ScanCharacteristicUUID))){
                String response = new String(characteristic.getValue());
-               if(TextUtils.equals(Constant.SCAN_REQUEST_RESPONSE, response)){
-                   read(Constant.ScanRecordCharacteristicUUID);
+               if(response != null){
+                   try {
+                       JSONObject object1 = new JSONObject(response);
+                       WifiBean wifiBean = new WifiBean();
+                       wifiBean.setSSid(object1.getString("ssid"));
+                       wifiBean.setSignal(object1.getString("signal"));
+                       JSONObject object2 = object1.getJSONObject("encryption");
+                       wifiBean.setWep((object2.getString("wep").equals("false") ) ? false : true);
+                       wifiBean.setWpa(object2.getString("wpa"));
+                       if(wifiBean != null){
+                           mUpdatesDelegate.didUpdateWifi(wifiBean);
+                       }
+                   } catch (JSONException e) {
+                       e.printStackTrace();
+                   }
                }
-            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.ConnectedStatusCharacteristicUUID))){
-               String response = new String(characteristic.getValue());
-               if(TextUtils.equals(Constant.CONNECTED_STATUS_FAILURE, response)){
-                   mUpdatesDelegate.didUpdateWifiConnectStatus(false);
-               }else if(TextUtils.equals(Constant.CONNECTED_STATUS_SUCCESS, response)){
-                   mUpdatesDelegate.didUpdateWifiConnectStatus(true);
+            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.ConnectCharacteristicUUID))){
+               byte[] data = characteristic.getValue();
+               int status = (int)data[0];
+               if(status == Constant.WIFI_DISCONNECT){
+                   mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_DISCONNECT);
+               }else if(status == Constant.WIFI_CONNECTING){
+                   mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTING);
+               }else if(status == Constant.WIFI_CONNECTED){
+                   mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTED);
                }
             }
         }
@@ -149,7 +159,7 @@ public class BleEngine {
             if(status == BluetoothGatt.GATT_SUCCESS){
                 if(mBluetoothGatt != null){
                     mBluetoothGatt.discoverServices();
-                    registerListener(true, Constant.ScanRequestCharacteristicUUID);
+                    registerListener(true, Constant.ScanCharacteristicUUID);
                 }
             }
         }
@@ -262,7 +272,7 @@ public class BleEngine {
         });
     }
 
-    public void write(String ssid, String password, String strValue, String CharacteristicUUID){
+    public void write(String ssid, String password, String value, String CharacteristicUUID){
         if(mBluetoothGatt == null){
             return;
         }
@@ -271,19 +281,25 @@ public class BleEngine {
             public void run() {
                 BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(Constant.ServiceUUID));
                 if( gattService != null){
-                    if(CharacteristicUUID != null && TextUtils.equals(Constant.ScanRequestCharacteristicUUID, CharacteristicUUID)){
+                    if(CharacteristicUUID != null && TextUtils.equals(Constant.ScanCharacteristicUUID, CharacteristicUUID)){
                         BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(CharacteristicUUID));
-                        if(strValue != null && gattCharacteristic != null){
-                            gattCharacteristic.setValue(strValue.getBytes());
+                        if(value != null && gattCharacteristic != null){
+                            gattCharacteristic.setValue(value.getBytes());
                             mBluetoothGatt.writeCharacteristic(gattCharacteristic);
                         }
-                    }else if(CharacteristicUUID != null && TextUtils.equals(Constant.ConnectRequestCharacteristicUUID, CharacteristicUUID)){
+                    }else if(CharacteristicUUID != null && TextUtils.equals(Constant.ConnectCharacteristicUUID, CharacteristicUUID)){
                         BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(CharacteristicUUID));
                         if(gattCharacteristic != null){
                               if(ssid != null && password != null){
-                                  String wifiConfig = ssid+","+password;
-                                  gattCharacteristic.setValue(wifiConfig.getBytes());
-                                  mBluetoothGatt.writeCharacteristic(gattCharacteristic);
+                                  String JsonBean = "{'ssid':'"+ ssid + "','pwd':'"+ password +"'}";
+                                  try{
+                                      JSONObject jsonObject = new JSONObject(JsonBean);
+                                      String data = jsonObject.toString();
+                                      gattCharacteristic.setValue(data.getBytes());
+                                      mBluetoothGatt.writeCharacteristic(gattCharacteristic);
+                                  }catch (JSONException e) {
+                                      e.printStackTrace();
+                                  }
                               }
                         }
                     }
@@ -315,10 +331,10 @@ public class BleEngine {
     }
 
     public interface UpdatesDelegate{
-        void didUpdateWifiList(List<WifiBean> wifiList);
+        void didUpdateWifi(WifiBean wifiBean);
         void didUpdateBleConnectStatus(int status);
         void didUpdateLeDevices(TASystem taSystem, int rssi);
-        void didUpdateWifiConnectStatus(boolean status);
+        void didUpdateWifiConnectStatus(int status);
     }
 }
 

@@ -84,7 +84,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void readWifiList(){
-        mBleEngine.write(null,null, Constant.WRITE_SCAN_REQUEST, Constant.ScanRequestCharacteristicUUID);
+        mBleEngine.write(null,null, Constant.WRITE_SCAN_REQUEST, Constant.ScanCharacteristicUUID);
     }
 
     /**
@@ -97,7 +97,17 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      * @param passWord will connect wifi password
      */
     public void connectWifi(String ssid, String passWord){
-        mBleEngine.write(ssid, passWord,null, Constant.ConnectRequestCharacteristicUUID);
+        mBleEngine.write(ssid, passWord,null, Constant.ConnectCharacteristicUUID);
+    }
+
+    /**
+     *  Using this method the method didUpdateWifiConnectStatus will call back
+     *
+     * @see onBleListener
+     *
+     */
+    public void readWifiConnectStatus(){
+        mBleEngine.read(Constant.ConnectCharacteristicUUID);
     }
 
     /**
@@ -126,10 +136,10 @@ public class BleManager implements BleEngine.UpdatesDelegate{
 
 
     @Override
-    public void didUpdateWifiList(List<WifiBean> wifiList) {
+    public void didUpdateWifi(WifiBean wifiBean) {
         synchronized (mOnBleListeners) {
             for (onBleListener listener : mOnBleListeners) {
-                listener.didUpdateWifiList(wifiList);
+                listener.didUpdateWifi(wifiBean);
             }
         }
     }
@@ -154,7 +164,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     }
 
     @Override
-    public void didUpdateWifiConnectStatus(boolean status) {
+    public void didUpdateWifiConnectStatus(int status) {
         synchronized (mOnBleListeners){
             for(onBleListener listener : mOnBleListeners){
                 listener.didUpdateWifiConnectStatus(status);
@@ -177,9 +187,9 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         /**
          * The method will call back when start read wifi list , and return a wifi list
          *
-         * @param wifiList  return wifi list from speaker scan
+         * @param wifiBean  return wifi object from speaker scan
          */
-        void didUpdateWifiList(List<WifiBean> wifiList);
+        void didUpdateWifi(WifiBean wifiBean);
 
         /**
          * The method will call back when start scan around BLE devices , and return BLE device
@@ -193,8 +203,8 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         /**
          * The method will call back wifi connect status when choice wifi to connect
          *
-         * @param status The status value false is disconnect, value true is connected
+         * @param status The status value 0 is disconnect, value 1 is connecting, value 2 is connected
          */
-        void didUpdateWifiConnectStatus(boolean status);
+        void didUpdateWifiConnectStatus(int status);
     }
 }
