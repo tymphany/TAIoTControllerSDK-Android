@@ -130,7 +130,7 @@ You should connect device first before start the wifi ble onboard.
   *
   * @param wifiBean  return wifi object from speaker scan
   */
-  void didUpdateWifiList(WifiBean wifiBean);    
+  void didUpdateWifi(WifiBean wifiBean);    
 ```
 
 ##### Configure wifi to device
