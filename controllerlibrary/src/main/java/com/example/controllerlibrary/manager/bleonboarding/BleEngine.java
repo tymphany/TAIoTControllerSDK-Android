@@ -57,14 +57,22 @@ public class BleEngine {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
-            mUpdatesDelegate.didUpdateBleConnectStatus(newState);
+
             if(newState == BluetoothProfile.STATE_CONNECTED){
                 mBluetoothGatt.requestMtu(517);
                 stopLeScan();
+                workHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBluetoothGatt.discoverServices();
+                        registerListener(true, Constant.ScanCharacteristicUUID);
+                        mUpdatesDelegate.didUpdateBleConnectStatus(newState);
+                    }
+                },1000L);
             }else if(newState == BluetoothProfile.STATE_DISCONNECTING){
-
+                mUpdatesDelegate.didUpdateBleConnectStatus(newState);
             }else if(newState == BluetoothProfile.STATE_DISCONNECTED){
-
+                mUpdatesDelegate.didUpdateBleConnectStatus(newState);
             }
         }
 
@@ -141,6 +149,7 @@ public class BleEngine {
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
+
         }
 
         @Override
@@ -156,12 +165,7 @@ public class BleEngine {
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             super.onMtuChanged(gatt, mtu, status);
-            if(status == BluetoothGatt.GATT_SUCCESS){
-                if(mBluetoothGatt != null){
-                    mBluetoothGatt.discoverServices();
-                    registerListener(true, Constant.ScanCharacteristicUUID);
-                }
-            }
+
         }
     };
 
