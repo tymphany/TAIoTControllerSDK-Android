@@ -6,6 +6,7 @@ package com.example.controllerlibrary.manager;
 import android.content.Context;
 import com.qualcomm.qti.iotcontrollersdk.controller.IoTService;
 import com.qualcomm.qti.iotcontrollersdk.controller.interfaces.IoTCompletionCallback;
+import com.qualcomm.qti.iotcontrollersdk.controller.listeners.IoTAppListener;
 import com.qualcomm.qti.iotcontrollersdk.iotsys.resource.attributes.AVSOnboardingErrorAttr.Error;
 import com.qualcomm.qti.iotcontrollersdk.model.iotsys.IoTSysInfo;
 import com.qualcomm.qti.iotcontrollersdk.repository.IoTDevice;
@@ -13,41 +14,135 @@ import com.qualcomm.qti.iotcontrollersdk.repository.IoTBluetoothDevice;
 import com.qualcomm.qti.iotcontrollersdk.repository.IoTDevice.IoTSysUpdatesDelegate;
 import com.qualcomm.qti.iotcontrollersdk.repository.IoTDevice.IoTVoiceUIClient;
 import com.qualcomm.qti.iotcontrollersdk.iotsys.resource.attributes.BatteryStatusAttr;
+import com.qualcomm.qti.iotcontrollersdk.repository.IoTGroup;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-public class IoTSysManager implements IoTSysUpdatesDelegate {
+public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
 
   private static IoTSysManager mInstance = new IoTSysManager();
+
+  private IoTService mIoTService;
 
   private WeakReference<Context> mContextRef;
   private final List<onVoiceUiListener> mVoiceUiListeners = new ArrayList<>();
   private final List<onSystemListener> mSystemListeners = new ArrayList<>();
   private final List<onZigbeeListener> mZigbeeListeners = new ArrayList<>();
   private final List<OnBluetoothListener> mOnBluetoothListeners = new ArrayList<>();
+  private final List<onIoTDeviceListener> mIoTDeviceListeners = new ArrayList<>();
 
-  public interface onVoiceUiListener {
 
-   default void voiceUIClientsDidChange(List<IoTVoiceUIClient> voiceUIClients) {
-   }
+  public interface onIoTDeviceListener {
+        /**
+         *  Found device via internet this method will call back
+         *
+         * @param ioTDevice
+         *                The device such as speaker
+         */
+        void onDeviceAdded(IoTDevice ioTDevice);
 
-   default void voiceUIEnabledStateDidChange(boolean enabled) {
-   }
+        /**
+         *  When device is removed this method will call back
+         *
+         */
+        void onRemoveIoTDevice();
+    }
 
-   default void voiceUIDefaultClientDidChange(IoTVoiceUIClient voiceUIClient) {
-   }
 
-   default void voiceUIDidProvideAVSAuthenticationCode(String code, String url) {
-   }
+    /**
+     * Add IoTDeviceListener, if have some update the onIoTDeviceListener interfaces will receive notify
+     *
+     * @param listener
+     * @see onIoTDeviceListener
+     */
+    public void addIoTDeviceListener(onIoTDeviceListener listener) {
+        synchronized (mIoTDeviceListeners) {
+            if (listener != null && !mIoTDeviceListeners.contains(listener)) {
+                mIoTDeviceListeners.add(listener);
+            }
+        }
+    }
 
-   default void voiceUIOnboardingDidErrorWithTimeout(Error didTimeout, int reattempt) {
-   }
+    /**
+     * Add IoTDeviceListener, if have some update the onIoTDeviceListener interfaces will not receive notify
+     *
+     * @param listener
+     * @see onIoTDeviceListener
+     */
+    public void removeIoTDeviceListener(onIoTDeviceListener listener) {
+        synchronized (mIoTDeviceListeners) {
+            if (listener != null) {
+                mIoTDeviceListeners.remove(listener);
+            }
+        }
+    }
 
-	}
 
-	public boolean isZbCoordinator(String deviceId) {
+    @Override
+    public void onPlayerGroupAdd(IoTGroup ioTGroup) {
+
+    }
+
+    @Override
+    public void onPlayerGroupRemoved(IoTGroup ioTGroup) {
+
+    }
+
+    @Override
+    public void onPlayerGroupChanged(IoTGroup ioTGroup) {
+
+    }
+
+    @Override
+    public void onPlayerReDiscovered() {
+
+    }
+
+    @Override
+    public void onSurroundPlayerDiscovered(String s, String s1) {
+
+    }
+
+    @Override
+    public void onDeviceAdded(IoTDevice ioTDevice) {
+        synchronized (mIoTDeviceListeners) {
+            for (onIoTDeviceListener listener : mIoTDeviceListeners) {
+                listener.onDeviceAdded(ioTDevice);
+            }
+        }
+    }
+
+    @Override
+    public void onRemoveIoTDevice() {
+        synchronized (mIoTDeviceListeners) {
+            for (onIoTDeviceListener listener : mIoTDeviceListeners) {
+                listener.onRemoveIoTDevice();
+            }
+        }
+    }
+
+    public interface onVoiceUiListener {
+
+    default void voiceUIClientsDidChange(List<IoTVoiceUIClient> voiceUIClients) {
+    }
+
+    default void voiceUIEnabledStateDidChange(boolean enabled) {
+    }
+
+    default void voiceUIDefaultClientDidChange(IoTVoiceUIClient voiceUIClient) {
+    }
+
+    default void voiceUIDidProvideAVSAuthenticationCode(String code, String url) {
+    }
+
+    default void voiceUIOnboardingDidErrorWithTimeout(Error didTimeout, int reattempt) {
+    }
+
+    }
+
+  public boolean isZbCoordinator(String deviceId) {
       return IoTService.getInstance().isZbCoordinator(deviceId);
   }
 
@@ -56,8 +151,23 @@ public class IoTSysManager implements IoTSysUpdatesDelegate {
   }
 
 	public interface onSystemListener {
-   void didChangeName(String name);
-   void deviceDidChangeBatteryState(BatteryStatusAttr attr);
+        /**
+         * If change device name success, this method will call back
+         *
+          * @param name
+         *             Changed name
+         */
+      void didChangeName(String name);
+      void deviceDidChangeBatteryState(BatteryStatusAttr attr);
+
+        /**
+         * If led pattern is changed or you change success via setLedPattern method, this method will call back
+         *
+         *
+         * @param ledPattern
+         *               The led pattern will be define on FW side
+         */
+      void deviceDidChangeLedPattern(int ledPattern);
 	}
 
 	public interface onZigbeeListener {
@@ -156,8 +266,21 @@ public class IoTSysManager implements IoTSysUpdatesDelegate {
   public static IoTSysManager getInstance() throws Exception {
     if(mInstance.mContextRef == null || mInstance.mContextRef.get() == null)
       throw new Exception("no IoTSys manager instance created!");
-    return mInstance;
+      return mInstance;
   }
+
+   /**
+    *   The method will start discover device on connected wifi.
+    *   When you start app , after you call IoTSysManager init method then you should call this method to
+    *   discover device 
+    *
+    */
+  public synchronized void start() {
+        mIoTService = IoTService.getInstance();
+        mIoTService.setAppListener(this);
+        mIoTService.start(mContextRef.get());
+   }
+
 
   public void addVoiceUiListener(onVoiceUiListener listener) {
     if(listener != null && !mVoiceUiListeners.contains(listener)) {
@@ -183,12 +306,30 @@ public class IoTSysManager implements IoTSysUpdatesDelegate {
     }
   }
 
-  public void setDeviceName(String host, String name, IoTCompletionCallback callback) {
-    IoTService.getInstance().setDeviceName(host, name, callback);
+    /**
+     *  Use this method will set device name that you want
+     *
+     * @param device  Current device (Speaker) , you want to change name's device
+     * @param name    The name want to set
+     * @param callback Call back if you change success
+     */
+  public void setDeviceName(IoTDevice device, String name, IoTCompletionCallback callback) {
+      device.setDeviceName(name, callback);
+  }
+
+    /**
+     *  Use this method will set led pattern that you want
+     *
+     * @param device   Current device (Speaker) , you want to change led pattern's device
+     * @param ledPattern  The led pattern want to set
+     * @param callback  Call back if you change success
+     */
+  public void setLedPattern(IoTDevice device, int ledPattern, IoTCompletionCallback callback){
+       device.setLedPattern(ledPattern,callback);
   }
 
   public void setZigbeeName(String host, String name, int id, IoTCompletionCallback callback) {
-    IoTService.getInstance().setZigbeeName(host, name, id, callback);
+      IoTService.getInstance().setZigbeeName(host, name, id, callback);
   }
 
     public void rebootDevice(String id, IoTCompletionCallback callback){
@@ -235,7 +376,7 @@ public class IoTSysManager implements IoTSysUpdatesDelegate {
   public void didChangeName(String name) {
     synchronized (mSystemListeners) {
       for (onSystemListener listener : mSystemListeners) {
-        listener.didChangeName(name);
+            listener.didChangeName(name);
       }
     }
   }
@@ -249,7 +390,16 @@ public class IoTSysManager implements IoTSysUpdatesDelegate {
     }
   }
 
-  @Override
+    @Override
+  public void deviceDidChangeLedPattern(int ledPattern) {
+       synchronized (mSystemListeners) {
+            for (onSystemListener listener : mSystemListeners) {
+                listener.deviceDidChangeLedPattern(ledPattern);
+            }
+        }
+   }
+
+    @Override
   public void deviceDidChangeEthernetState() {
 
   }
