@@ -177,18 +177,102 @@ The `IoTSysManager` class is related to the `IoTDevice` and `IoTService` in the 
 #### init
 
 ```java
-IoTService.init(Arrays.asList(OCF_RESOURCE_TYPE_ALLPLAY, OCF_RESOURCE_TYPE_IOTSYS), IoTDiscovery.getInstance());
+IoTService.init(Arrays.asList(OCF_RESOURCE_TYPE_IOTSYS), IoTDiscovery.getInstance());
 
 IoTSysManager.init(this);
+
+/**
+  *  Using this method start discover device on your connected wifi 
+  *
+  * 
+  */
+IoTSysManager.getInstance().start()
 ```
 ##### please see on App layer in demo project, The App package below has a `SmartAudioApplication` class to init 
 
+#### add listener or remove listener
+
+```java
+
+IoTSysManager.getInstance().addIoTDeviceListener(this);
+
+IoTSysManager.getInstance().removeIoTDeviceListener(this);
+
+IoTSysManager.getInstance().addSystemListener(this);
+
+IoTSysManager.getInstance().removeSystemListener(this);
+
+```
+
+#### Add device or remove device
+```java
+
+   /**
+         *  Found device via internet this method will call back
+         *
+         * @param ioTDevice
+         *                The device such as speaker
+         */
+        void onDeviceAdded(IoTDevice ioTDevice);
+	
+
+        /**
+         *  When device is removed this method will call back
+         *
+         */
+        void onRemoveIoTDevice();
+
+```
+##### When the method onRemoveIoTDevice() callback, can use below method get current device
+```java
+   
+   IoTService.getInstance().getAllDevices();
+   
+```
+
 #### Device setting
+
 ```java
 
   rebootDevice(String id, IoTCompletionCallback callback)
+  
 
-  setDeviceName(String host, String name, IoTCompletionCallback callback)
+    /**
+     *  Use this method will set device name that you want
+     *
+     * @param device  Current device (Speaker) , you want to change name's device
+     * @param name    The name want to set
+     * @param callback Call back if you change success
+     */
+  public void setDeviceName(IoTDevice device, String name, IoTCompletionCallback callback)
+  
+     /**
+      * If change device name success, this method will call back
+      *
+      * @param name
+      *             Changed name
+      */
+  void didChangeName(String name);
+  
+  
+    /**
+     *  Use this method will set led pattern that you want
+     *
+     * @param device   Current device (Speaker) , you want to change led pattern's device
+     * @param ledPattern  The led pattern want to set
+     * @param callback  Call back if you change success
+     */
+  public void setLedPattern(IoTDevice device, int ledPattern, IoTCompletionCallback callback)
+  
+  
+    /**
+      * If led pattern is changed or you change success via setLedPattern method, this method will call back
+      *
+      *
+      * @param ledPattern
+      *               The led pattern will be define on FW side
+      */
+   void deviceDidChangeLedPattern(int ledPattern);
 
 ```
 ##### and so on
@@ -205,6 +289,14 @@ IoTSysManager.init(this);
 
 ```
 ##### and so on
+
+#### This method is called when exiting an application to disconnect and release resources
+
+```java
+
+   IoTService.getInstance().dispose();
+   
+```
 
 ## Author
 
