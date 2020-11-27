@@ -259,7 +259,7 @@ IoTSysManager.getInstance().removeSystemListener(this);
      *  Use this method will set led pattern that you want
      *
      * @param device   Current device (Speaker) , you want to change led pattern's device
-     * @param ledPattern  The led pattern want to set
+     * @param ledPattern  The led pattern want to set, the value is 0 to 10
      * @param callback  Call back if you change success
      */
   public void setLedPattern(IoTDevice device, int ledPattern, IoTCompletionCallback callback)
@@ -270,10 +270,31 @@ IoTSysManager.getInstance().removeSystemListener(this);
       *
       *
       * @param ledPattern
-      *               The led pattern will be define on FW side
+      *               The led pattern will be define on FW side, the pattern value is 0 to 10
       */
    void deviceDidChangeLedPattern(int ledPattern);
-
+   
+   
+     /**
+     *  Use this method will set led animation that you want
+     *
+     * @param device   Current device (Speaker) , you want to change led animation's device
+     * @param ledAnimation  The led animation want to set, the value is 0 to 2
+     * @param callback  Call back if you change success
+     */
+  public void setLedAnimation(IoTDevice device, int ledAnimation, IoTCompletionCallback callback){
+        device.setLedAnimation(ledAnimation,callback);
+  }
+   
+  /**
+    * If led animation is changed or you change success via setLedAnimation method, this method will call back
+    *
+    *
+    * @param ledAnimation
+    *               The led animation will be define on FW side, the animation value is 0 to 2
+    */
+  void deviceDidChangeLedAnimation(int ledAnimation);
+  
 ```
 ##### and so on
  
@@ -286,7 +307,11 @@ IoTSysManager.getInstance().removeSystemListener(this);
  getWifiMacAddress(String host)
 
  getFirmwareVersion(String host)
-
+ 
+ getLedPattern(IoTDevice ioTDevice)
+ 
+ getLedAnimation(IoTDevice ioTDevice)
+ 
 ```
 ##### and so on
 

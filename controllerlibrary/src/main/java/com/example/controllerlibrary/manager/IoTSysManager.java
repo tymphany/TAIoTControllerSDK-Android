@@ -165,9 +165,18 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
          *
          *
          * @param ledPattern
-         *               The led pattern will be define on FW side
+         *               The led pattern will be define on FW side, the pattern value is 0 to 10
          */
       void deviceDidChangeLedPattern(int ledPattern);
+
+        /**
+         * If led animation is changed or you change success via setLedAnimation method, this method will call back
+         *
+         *
+         * @param ledAnimation
+         *               The led animation will be define on FW side, the animation value is 0 to 2
+         */
+      void deviceDidChangeLedAnimation(int ledAnimation);
 	}
 
 	public interface onZigbeeListener {
@@ -321,11 +330,22 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
      *  Use this method will set led pattern that you want
      *
      * @param device   Current device (Speaker) , you want to change led pattern's device
-     * @param ledPattern  The led pattern want to set
+     * @param ledPattern  The led pattern want to set, the value is 0 to 10
      * @param callback  Call back if you change success
      */
   public void setLedPattern(IoTDevice device, int ledPattern, IoTCompletionCallback callback){
        device.setLedPattern(ledPattern,callback);
+  }
+
+    /**
+     *  Use this method will set led animation that you want
+     *
+     * @param device   Current device (Speaker) , you want to change led animation's device
+     * @param ledAnimation  The led animation want to set, the value is 0 to 2
+     * @param callback  Call back if you change success
+     */
+  public void setLedAnimation(IoTDevice device, int ledAnimation, IoTCompletionCallback callback){
+        device.setLedAnimation(ledAnimation,callback);
   }
 
   public void setZigbeeName(String host, String name, int id, IoTCompletionCallback callback) {
@@ -372,6 +392,14 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         return IoTService.getInstance().getIoTSysInfo(host);
     }
 
+    public int getLedPattern(IoTDevice ioTDevice){
+        return ioTDevice.getLedPattern();
+    }
+
+    public int getLedAnimation(IoTDevice ioTDevice){
+        return ioTDevice.getLedAnimation();
+    }
+
   @Override
   public void didChangeName(String name) {
     synchronized (mSystemListeners) {
@@ -398,6 +426,15 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
             }
         }
    }
+
+    @Override
+  public void deviceDidChangeLedAnimation(int ledAnimation) {
+        synchronized (mSystemListeners) {
+            for (onSystemListener listener : mSystemListeners) {
+                listener.deviceDidChangeLedAnimation(ledAnimation);
+            }
+        }
+  }
 
     @Override
   public void deviceDidChangeEthernetState() {
