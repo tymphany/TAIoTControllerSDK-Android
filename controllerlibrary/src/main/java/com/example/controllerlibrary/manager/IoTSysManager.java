@@ -8,6 +8,7 @@ import com.qualcomm.qti.iotcontrollersdk.controller.IoTService;
 import com.qualcomm.qti.iotcontrollersdk.controller.interfaces.IoTCompletionCallback;
 import com.qualcomm.qti.iotcontrollersdk.controller.listeners.IoTAppListener;
 import com.qualcomm.qti.iotcontrollersdk.iotsys.resource.attributes.AVSOnboardingErrorAttr.Error;
+import com.qualcomm.qti.iotcontrollersdk.iotsys.resource.attributes.StereoAttr;
 import com.qualcomm.qti.iotcontrollersdk.model.iotsys.IoTSysInfo;
 import com.qualcomm.qti.iotcontrollersdk.repository.IoTDevice;
 import com.qualcomm.qti.iotcontrollersdk.repository.IoTBluetoothDevice;
@@ -32,6 +33,7 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
   private final List<onZigbeeListener> mZigbeeListeners = new ArrayList<>();
   private final List<OnBluetoothListener> mOnBluetoothListeners = new ArrayList<>();
   private final List<onIoTDeviceListener> mIoTDeviceListeners = new ArrayList<>();
+  private final List<onStereoListener> mStereoListeners = new ArrayList<>();
 
 
   public interface onIoTDeviceListener {
@@ -79,6 +81,21 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         }
     }
 
+    public void addStereoListener(onStereoListener listener) {
+        synchronized (mStereoListeners) {
+            if (listener != null && !mStereoListeners.contains(listener)) {
+                mStereoListeners.add(listener);
+            }
+        }
+    }
+
+    public void removeStereoListener(onStereoListener listener) {
+        synchronized (mStereoListeners) {
+            if (listener != null) {
+                mStereoListeners.remove(listener);
+            }
+        }
+    }
 
     @Override
     public void onPlayerGroupAdd(IoTGroup ioTGroup) {
@@ -154,30 +171,53 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         /**
          * If change device name success, this method will call back
          *
+         *  @param device
+         *              The IoT device for which the state has changed.
           * @param name
          *             Changed name
          */
-      void didChangeName(String name);
+      void didChangeName(IoTDevice device, String name);
       void deviceDidChangeBatteryState(BatteryStatusAttr attr);
 
         /**
          * If led pattern is changed or you change success via setLedPattern method, this method will call back
          *
-         *
+         * @param device
+         *              The IoT device for which the state has changed.
          * @param ledPattern
-         *               The led pattern will be define on FW side, the pattern value is 0 to 10
+         *              The led pattern will be define on FW side, the pattern value is 0 to 10
          */
-      void deviceDidChangeLedPattern(int ledPattern);
+      void deviceDidChangeLedPattern(IoTDevice device, int ledPattern);
 
         /**
          * If led animation is changed or you change success via setLedAnimation method, this method will call back
          *
-         *
+         * @param device
+         *              The IoT device for which the state has changed.
          * @param ledAnimation
-         *               The led animation will be define on FW side, the animation value is 0 to 2
+         *              The led animation will be define on FW side, the animation value is 0 to 2
          */
-      void deviceDidChangeLedAnimation(int ledAnimation);
+      void deviceDidChangeLedAnimation(IoTDevice device, int ledAnimation);
 	}
+
+	public interface onStereoListener{
+        /**
+         * If stereo state is changed or you change success via setStereo method, this method will call back
+         *
+         * @param device
+         *              The IoT device for which the state has changed.
+         * @param stereoAttr
+         *              The stereoAttr contain groupid and stereo type (Type value 0 to 2 )
+         *
+         *              when groupId and stereo type both are 0 , that is unPair status
+         *
+         *              type value 0 is stereo
+         *              type value 1 is left
+         *              type value 2 is right
+         */
+
+        void deviceDidChangeStereoState(IoTDevice device, StereoAttr stereoAttr);
+    }
 
 	public interface onZigbeeListener {
       void onZbAdapterStateChanged(IoTDevice device);
@@ -348,6 +388,25 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         device.setLedAnimation(ledAnimation,callback);
   }
 
+    /**
+     *  Use this method will set stereo pair, when two devices in a group you set groupId and stereo type both are 0 that is unPair
+     *
+     * @param device   Current device (Speaker) , you want to set stereoPair device
+     *
+     * @param groupId  The groupId is a unique number randomly generated, When stereo pair mode there are two devices must be same groupID
+     *
+     * @param stereoType  The value is 0 to 2
+     *
+     *              type value 0 is stereo
+     *              type value 1 is left
+     *              type value 2 is right
+     *
+     * @param callback  Call back if you change success
+     */
+  public void setStereo(IoTDevice device, int groupId, int stereoType, IoTCompletionCallback callback){
+        device.setStereo(groupId, stereoType, callback);
+  }
+
   public void setZigbeeName(String host, String name, int id, IoTCompletionCallback callback) {
       IoTService.getInstance().setZigbeeName(host, name, id, callback);
   }
@@ -400,11 +459,20 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         return ioTDevice.getLedAnimation();
     }
 
+    public int getStereoType(IoTDevice ioTDevice){
+        return ioTDevice.getStereoType();
+    }
+
+    public int getStereoGroupId(IoTDevice ioTDevice){
+      return  ioTDevice.getStereoGroupId();
+    }
+
+
   @Override
-  public void didChangeName(String name) {
+  public void didChangeName(IoTDevice device, String name) {
     synchronized (mSystemListeners) {
       for (onSystemListener listener : mSystemListeners) {
-            listener.didChangeName(name);
+            listener.didChangeName(device, name);
       }
     }
   }
@@ -419,22 +487,32 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
   }
 
     @Override
-  public void deviceDidChangeLedPattern(int ledPattern) {
+  public void deviceDidChangeLedPattern(IoTDevice device, int ledPattern) {
        synchronized (mSystemListeners) {
             for (onSystemListener listener : mSystemListeners) {
-                listener.deviceDidChangeLedPattern(ledPattern);
+                listener.deviceDidChangeLedPattern(device, ledPattern);
             }
         }
    }
 
     @Override
-  public void deviceDidChangeLedAnimation(int ledAnimation) {
+  public void deviceDidChangeLedAnimation(IoTDevice device, int ledAnimation) {
         synchronized (mSystemListeners) {
             for (onSystemListener listener : mSystemListeners) {
-                listener.deviceDidChangeLedAnimation(ledAnimation);
+                listener.deviceDidChangeLedAnimation(device, ledAnimation);
             }
         }
   }
+
+
+    @Override
+    public void deviceDidChangeStereoState(IoTDevice device, StereoAttr stereoAttr) {
+        synchronized (mStereoListeners) {
+            for (onStereoListener listener : mStereoListeners) {
+                listener.deviceDidChangeStereoState(device,stereoAttr);
+            }
+        }
+    }
 
     @Override
   public void deviceDidChangeEthernetState() {
