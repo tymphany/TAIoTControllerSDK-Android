@@ -202,6 +202,14 @@ IoTSysManager.getInstance().addSystemListener(this);
 
 IoTSysManager.getInstance().removeSystemListener(this);
 
+IoTSysManager.getInstance().addStereoListener(this);
+
+IoTSysManager.getInstance().removeStereoListener(this);
+
+IoTSysManager.getInstance().addOtaListener(this);
+
+IoTSysManager.getInstance().removeOtaListener(this);
+
 ```
 
 #### Add device or remove device
@@ -232,10 +240,7 @@ IoTSysManager.getInstance().removeSystemListener(this);
 
 #### Device setting
 
-```java
-
-  rebootDevice(String id, IoTCompletionCallback callback)
-  
+```java  
 
     /**
      *  Use this method will set device name that you want
@@ -246,13 +251,15 @@ IoTSysManager.getInstance().removeSystemListener(this);
      */
   public void setDeviceName(IoTDevice device, String name, IoTCompletionCallback callback)
   
-     /**
+    /**
       * If change device name success, this method will call back
       *
+      *  @param device
+      *              The IoT device for which the state has changed.
       * @param name
       *             Changed name
       */
-  void didChangeName(String name);
+  void didChangeName(IoTDevice device, String name);
   
   
     /**
@@ -265,14 +272,15 @@ IoTSysManager.getInstance().removeSystemListener(this);
   public void setLedPattern(IoTDevice device, int ledPattern, IoTCompletionCallback callback)
   
   
-    /**
-      * If led pattern is changed or you change success via setLedPattern method, this method will call back
-      *
-      *
-      * @param ledPattern
-      *               The led pattern will be define on FW side, the pattern value is 0 to 10
-      */
-   void deviceDidChangeLedPattern(int ledPattern);
+     /**
+       * If led pattern is changed or you change success via setLedPattern method, this method will call back
+       *
+       * @param device
+       *              The IoT device for which the state has changed.
+       * @param ledPattern
+       *              The led pattern will be define on FW side, the pattern value is 0 to 10
+       */
+   void deviceDidChangeLedPattern(IoTDevice device, int ledPattern);
    
    
      /**
@@ -282,35 +290,113 @@ IoTSysManager.getInstance().removeSystemListener(this);
      * @param ledAnimation  The led animation want to set, the value is 0 to 2
      * @param callback  Call back if you change success
      */
-  public void setLedAnimation(IoTDevice device, int ledAnimation, IoTCompletionCallback callback){
-        device.setLedAnimation(ledAnimation,callback);
-  }
+  public void setLedAnimation(IoTDevice device, int ledAnimation, IoTCompletionCallback callback)
    
   /**
     * If led animation is changed or you change success via setLedAnimation method, this method will call back
     *
-    *
+    * @param device
+    *              The IoT device for which the state has changed.
     * @param ledAnimation
-    *               The led animation will be define on FW side, the animation value is 0 to 2
+    *              The led animation will be define on FW side, the animation value is 0 to 2
     */
-  void deviceDidChangeLedAnimation(int ledAnimation);
+  void deviceDidChangeLedAnimation(IoTDevice device, int ledAnimation);
+  
+  
+   /**
+     *  Use this method will set stereo pair, when two devices in a group you set groupId and stereo type both are 0 that is unPair
+     *
+     * @param device   Current device (Speaker) , you want to set stereoPair device
+     *
+     * @param groupId  The groupId is a unique number randomly generated, When stereo pair mode there are two devices must be same groupID
+     *
+     * @param stereoType  The value is 0 to 2
+     *
+     *              type value 0 is stereo
+     *              type value 1 is left
+     *              type value 2 is right
+     *
+     * @param callback  Call back if you change success
+     */ 
+ 
+ public void setStereo(IoTDevice device, int groupId, int stereoType, IoTCompletionCallback callback)
+ 
+   /**
+     * If stereo state is changed or you change success via setStereo method, this method will call back
+     *
+     * @param device
+     *              The IoT device for which the state has changed.
+     * @param stereoAttr
+     *              The stereoAttr contain groupid and stereo type (Type value 0 to 2 )
+     *
+     *              when groupId and stereo type both are 0 , that is unPair status
+     *
+     *              type value 0 is stereo
+     *              type value 1 is left
+     *              type value 2 is right
+     */
+
+  void deviceDidChangeStereoState(IoTDevice device, StereoAttr stereoAttr);
   
 ```
 ##### and so on
+
+##### OTA
+
+```java
+   /**
+     *  Asynchronously dispatch request to download firmware of the speaker.
+     *
+     * @param device Current device (Speaker), you want to start download firmware
+     * @param firmwareUrl  firmwareUrl the download url for the firmware ota file.
+     * @param checksum   checksum the checksum of firmware ota file.
+     * @param name  name the user name for the ota server.
+     * @param pwd  pwd the password of target user for the ota server.
+     * @param version  version the version of the firmware.
+     * @param packageName   packageName the package name of the firmware ota file.
+     * @param callback  completion block to be called asynchronously upon completion (successful or otherwise).
+     */
+public void startDownloadFirmware(IoTDevice device,String firmwareUrl, String checksum, String name, String pwd, String version, String packageName, IoTCompletionCallback       callback)   
+
+   /**
+     *  Asynchronously dispatch request to start ota update of the speaker.
+     *
+     * @param device   Current device (Speaker), you want to start ota
+     * @param packageName  packageName the package name of the firmware ota file.
+     * @param checksum  checksum the checksum of the firmware ota file.
+     * @param callback  completion block to be called asynchronously upon completion (successful or otherwise).
+     */
+public void startOtaUpdate(IoTDevice device, String packageName, String checksum, IoTCompletionCallback callback)
+
+
+   /**
+     *  Notification that the ota status for a device has changed.
+     *
+     * @param ioTDevice  device the device that has been affected.
+     * @param ioTOtaStatus status the new ota status.
+     * @param progress progress the new ota progress from 0 to 100. Currently this value only valid when ota status is downloading.
+     * @param version  version the version for current ota file. This value only valid when ota status is not none.
+     */
+
+void deviceDidChangeOtaStatus(IoTDevice ioTDevice, IoTDevice.IoTOtaStatus ioTOtaStatus, int progress, String version);
+
+```
  
 #### Device information
 
 ```java
 
- getWifiIPAddress(String host)
-
- getWifiMacAddress(String host)
-
- getFirmwareVersion(String host)
+ getFirmwareVersion(IoTDevice ioTDevice)
  
  getLedPattern(IoTDevice ioTDevice)
  
  getLedAnimation(IoTDevice ioTDevice)
+ 
+ getStereoType(IoTDevice ioTDevice)
+ 
+ getStereoGroupId(IoTDevice ioTDevice)
+ 
+ getIoTOtaStatus(IoTDevice ioTDevice)
  
 ```
 ##### and so on
