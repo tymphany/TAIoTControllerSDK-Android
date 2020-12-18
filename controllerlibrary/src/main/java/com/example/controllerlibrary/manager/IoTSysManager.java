@@ -4,6 +4,7 @@ package com.example.controllerlibrary.manager;
 
 
 import android.content.Context;
+
 import com.qualcomm.qti.iotcontrollersdk.controller.IoTService;
 import com.qualcomm.qti.iotcontrollersdk.controller.interfaces.IoTCompletionCallback;
 import com.qualcomm.qti.iotcontrollersdk.controller.listeners.IoTAppListener;
@@ -16,6 +17,7 @@ import com.qualcomm.qti.iotcontrollersdk.repository.IoTDevice.IoTSysUpdatesDeleg
 import com.qualcomm.qti.iotcontrollersdk.repository.IoTDevice.IoTVoiceUIClient;
 import com.qualcomm.qti.iotcontrollersdk.iotsys.resource.attributes.BatteryStatusAttr;
 import com.qualcomm.qti.iotcontrollersdk.repository.IoTGroup;
+import com.qualcomm.qti.iotcontrollersdk.repository.OtaStatusBean;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
   private final List<OnBluetoothListener> mOnBluetoothListeners = new ArrayList<>();
   private final List<onIoTDeviceListener> mIoTDeviceListeners = new ArrayList<>();
   private final List<onStereoListener> mStereoListeners = new ArrayList<>();
+  private final List<onOtaListener> mOtaListeners = new ArrayList<>();
 
 
   public interface onIoTDeviceListener {
@@ -93,6 +96,23 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         synchronized (mStereoListeners) {
             if (listener != null) {
                 mStereoListeners.remove(listener);
+            }
+        }
+    }
+
+
+    public void addOtaListener(onOtaListener listener) {
+        synchronized (mOtaListeners) {
+            if (listener != null && !mOtaListeners.contains(listener)) {
+                mOtaListeners.add(listener);
+            }
+        }
+    }
+
+    public void removeOtaListener(onOtaListener listener) {
+        synchronized (mOtaListeners) {
+            if (listener != null) {
+                mOtaListeners.remove(listener);
             }
         }
     }
@@ -217,6 +237,19 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
          */
 
         void deviceDidChangeStereoState(IoTDevice device, StereoAttr stereoAttr);
+    }
+
+    public interface onOtaListener{
+        /**
+         *  Notification that the ota status for a device has changed.
+         *
+         * @param ioTDevice  device the device that has been affected.
+         * @param ioTOtaStatus status the new ota status.
+         * @param progress progress the new ota progress from 0 to 100. Currently this value only valid when ota status is downloading.
+         * @param version  version the version for current ota file. This value only valid when ota status is not none.
+         */
+
+        void deviceDidChangeOtaStatus(IoTDevice ioTDevice, IoTDevice.IoTOtaStatus ioTOtaStatus, int progress, String version);
     }
 
 	public interface onZigbeeListener {
@@ -407,6 +440,34 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         device.setStereo(groupId, stereoType, callback);
   }
 
+    /**
+     *  Asynchronously dispatch request to download firmware of the speaker.
+     *
+     * @param device Current device (Speaker), you want to start download firmware
+     * @param firmwareUrl  firmwareUrl the download url for the firmware ota file.
+     * @param checksum   checksum the checksum of firmware ota file.
+     * @param name  name the user name for the ota server.
+     * @param pwd  pwd the password of target user for the ota server.
+     * @param version  version the version of the firmware.
+     * @param packageName   packageName the package name of the firmware ota file.
+     * @param callback  completion block to be called asynchronously upon completion (successful or otherwise).
+     */
+  public void startDownloadFirmware(IoTDevice device,String firmwareUrl, String checksum, String name, String pwd, String version, String packageName, IoTCompletionCallback callback){
+        device.startDownloadFirmware(firmwareUrl, checksum, name, pwd, version, packageName, callback);
+  }
+
+    /**
+     *  Asynchronously dispatch request to start ota update of the speaker.
+     *
+     * @param device   Current device (Speaker), you want to start ota
+     * @param packageName  packageName the package name of the firmware ota file.
+     * @param checksum  checksum the checksum of the firmware ota file.
+     * @param callback  completion block to be called asynchronously upon completion (successful or otherwise).
+     */
+  public void startOtaUpdate(IoTDevice device, String packageName, String checksum, IoTCompletionCallback callback){
+        device.startOtaUpdate(packageName, checksum, callback);
+  }
+
   public void setZigbeeName(String host, String name, int id, IoTCompletionCallback callback) {
       IoTService.getInstance().setZigbeeName(host, name, id, callback);
   }
@@ -417,10 +478,6 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
 
     public void startAvsOnBoarding(String host, IoTCompletionCallback callback){
         IoTService.getInstance().startAvsOnBoarding(host, callback);
-    }
-
-    public String getFirmwareVersion(String host){
-        return IoTService.getInstance().getFirmwareVersion(host);
     }
 
     public String getModel(String host){
@@ -467,6 +524,13 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
       return  ioTDevice.getStereoGroupId();
     }
 
+    public String getFrimwareVersion(IoTDevice ioTDevice){
+      return  ioTDevice.getFirmwareVersion();
+    }
+
+    public IoTDevice.IoTOtaStatus getIoTOtaStatus(IoTDevice ioTDevice){
+      return ioTDevice.getIoTOtaStatus();
+    }
 
   @Override
   public void didChangeName(IoTDevice device, String name) {
@@ -510,6 +574,15 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         synchronized (mStereoListeners) {
             for (onStereoListener listener : mStereoListeners) {
                 listener.deviceDidChangeStereoState(device,stereoAttr);
+            }
+        }
+    }
+
+    @Override
+    public void deviceDidChangeOtaStatus(IoTDevice ioTDevice, IoTDevice.IoTOtaStatus ioTOtaStatus, OtaStatusBean otaStatusBean) {
+        synchronized (mOtaListeners){
+            for (onOtaListener listener : mOtaListeners){
+                listener.deviceDidChangeOtaStatus(ioTDevice, ioTOtaStatus, otaStatusBean.getProgress(), otaStatusBean.getVersion());
             }
         }
     }
