@@ -37,6 +37,7 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
   private final List<onIoTDeviceListener> mIoTDeviceListeners = new ArrayList<>();
   private final List<onStereoListener> mStereoListeners = new ArrayList<>();
   private final List<onOtaListener> mOtaListeners = new ArrayList<>();
+  private final List<onSourceSwitchListener> mSourceSwitchListeners = new ArrayList<>();
 
 
   public interface onIoTDeviceListener {
@@ -113,6 +114,22 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         synchronized (mOtaListeners) {
             if (listener != null) {
                 mOtaListeners.remove(listener);
+            }
+        }
+    }
+
+    public void addSourceSwitchListener(onSourceSwitchListener listener) {
+        synchronized (mSourceSwitchListeners) {
+            if (listener != null && !mSourceSwitchListeners.contains(listener)) {
+                mSourceSwitchListeners.add(listener);
+            }
+        }
+    }
+
+    public void removeSourceSwitchListener(onSourceSwitchListener listener) {
+        synchronized (mSourceSwitchListeners) {
+            if (listener != null) {
+                mSourceSwitchListeners.remove(listener);
             }
         }
     }
@@ -250,6 +267,17 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
          */
 
         void deviceDidChangeOtaStatus(IoTDevice ioTDevice, IoTDevice.IoTOtaStatus ioTOtaStatus, int progress, String version);
+    }
+
+    public interface onSourceSwitchListener{
+        /**
+         *  If source type is changed or you switch source via switchSource method, this method will call back
+         *
+         * @param ioTDevice device the device that has been affected.
+         *
+         * @param sourceType the current source type that has changed
+         */
+        void deviceDidChangeSourceType(IoTDevice ioTDevice, IoTDevice.SourceType sourceType);
     }
 
 	public interface onZigbeeListener {
@@ -468,6 +496,17 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         device.startOtaUpdate(packageName, checksum, callback);
   }
 
+    /**
+     *  use this method will switch source type, but this method only can switch wifi to bt via IoTivity
+     *
+     * @param device   current device (Speaker), you want to switch source
+     * @see IoTDevice.SourceType  sourceType contains wifi and bt
+     * @param callback  completion block to be called asynchronously upon completion (successful or otherwise)
+     */
+  public void switchSource(IoTDevice device, IoTDevice.SourceType sourceType, IoTCompletionCallback callback){
+      device.switchSource(sourceType, callback);
+  }
+
   public void setZigbeeName(String host, String name, int id, IoTCompletionCallback callback) {
       IoTService.getInstance().setZigbeeName(host, name, id, callback);
   }
@@ -532,6 +571,10 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
       return ioTDevice.getIoTOtaStatus();
     }
 
+    public IoTDevice.SourceType getSourceType(IoTDevice ioTDevice){
+      return ioTDevice.getSourceType();
+    }
+
   @Override
   public void didChangeName(IoTDevice device, String name) {
     synchronized (mSystemListeners) {
@@ -583,6 +626,15 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         synchronized (mOtaListeners){
             for (onOtaListener listener : mOtaListeners){
                 listener.deviceDidChangeOtaStatus(ioTDevice, ioTOtaStatus, otaStatusBean.getProgress(), otaStatusBean.getVersion());
+            }
+        }
+    }
+
+    @Override
+    public void deviceDidChangeSourceType(IoTDevice ioTDevice, IoTDevice.SourceType sourceType) {
+        synchronized (mSourceSwitchListeners){
+            for (onSourceSwitchListener listener : mSourceSwitchListeners){
+                listener.deviceDidChangeSourceType(ioTDevice, sourceType);
             }
         }
     }
