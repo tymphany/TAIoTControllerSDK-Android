@@ -511,8 +511,15 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
       IoTService.getInstance().setZigbeeName(host, name, id, callback);
   }
 
-    public void rebootDevice(String id, IoTCompletionCallback callback){
-        IoTService.getInstance().rebootDevice(id, callback);
+    /**
+     *  Use this method will reboot current device (Speaker)
+     *
+     * @param device   current device (Speaker), you want to reboot
+     *
+     * @param callback completion block to be called asynchronously upon completion (successful or otherwise)
+     */
+    public void rebootDevice(IoTDevice device, IoTCompletionCallback callback){
+        device.rebootDevice(callback);
     }
 
     public void startAvsOnBoarding(String host, IoTCompletionCallback callback){
@@ -527,12 +534,20 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         return IoTService.getInstance().getManufacturer(host);
     }
 
-    public String getWifiIPAddress(String host){
-        return IoTService.getInstance().getWifiIPAddress(host);
+    public String getWifiIPAddress(IoTDevice ioTDevice){
+        return ioTDevice.getWifiIPAddress();
     }
 
-    public String getWifiMacAddress(String host){
-        return IoTService.getInstance().getWifiMacAddress(host);
+    public String getWifiMacAddress(IoTDevice ioTDevice){
+        return ioTDevice.getWifiMacAddress();
+    }
+
+    public String getAccessWifiSSID(IoTDevice ioTDevice){
+        return ioTDevice.getAccessWifiSSID();
+    }
+
+    public String getAccessWifiRSSI(IoTDevice ioTDevice){
+        return ioTDevice.getAccessWifiRSSI();
     }
 
     public String getEthernetIPAddress(String host){
@@ -640,19 +655,20 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
     }
 
     @Override
-  public void deviceDidChangeEthernetState() {
+    public void deviceDidChangeEthernetState(IoTDevice ioTDevice, String ipAddress, String macAddress, boolean connectState) {
 
-  }
+    }
 
-  @Override
-  public void deviceDidChangeWiFiState() {
+    @Override
+    public void deviceDidChangeWiFiState(IoTDevice ioTDevice, String ipAddress, String macAddress, boolean connectState) {
 
-  }
+    }
 
-  @Override
-  public void deviceDidChangeAccessPointState() {
+    @Override
+    public void deviceDidChangeAccessPointState(IoTDevice ioTDevice, String rssi, String ssid) {
 
-  }
+    }
+
 
   /**
     * <p>This method unregisters the given listener from the list of listeners.</p>

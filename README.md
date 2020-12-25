@@ -210,6 +210,11 @@ IoTSysManager.getInstance().addOtaListener(this);
 
 IoTSysManager.getInstance().removeOtaListener(this);
 
+IoTSysManager.getInstance().addSourceSwitchListener(this);
+
+IoTSysManager.getInstance().removeSourceSwitchListener(this);
+
+
 ```
 
 #### Add device or remove device
@@ -338,9 +343,44 @@ IoTSysManager.getInstance().removeOtaListener(this);
 
   void deviceDidChangeStereoState(IoTDevice device, StereoAttr stereoAttr);
   
+  
+  
+   /**
+     *  use this method will switch source type, but this method only can switch wifi to bt via IoTivity
+     *
+     * @param device   current device (Speaker), you want to switch source
+     * @see IoTDevice.SourceType  sourceType contains wifi and bt
+     * @param callback  completion block to be called asynchronously upon completion (successful or otherwise)
+     */
+  public void switchSource(IoTDevice device, IoTDevice.SourceType sourceType, IoTCompletionCallback callback)
+  
+  
+   /**
+     *  If source type is changed or you switch source via switchSource method, this method will call back
+     *
+     * @param ioTDevice device the device that has been affected.
+     *
+     * @param sourceType the current source type that has changed
+     */
+  void deviceDidChangeSourceType(IoTDevice ioTDevice, IoTDevice.SourceType sourceType);
+  
 ```
 ##### and so on
 
+##### Reboot device
+
+```java
+
+     /**
+     *  Use this method will reboot current device (Speaker)
+     *
+     * @param device   current device (Speaker), you want to reboot
+     *
+     * @param callback completion block to be called asynchronously upon completion (successful or otherwise)
+     */
+  public void rebootDevice(IoTDevice device, IoTCompletionCallback callback)
+
+```
 ##### OTA
 
 ```java
@@ -397,6 +437,16 @@ void deviceDidChangeOtaStatus(IoTDevice ioTDevice, IoTDevice.IoTOtaStatus ioTOta
  getStereoGroupId(IoTDevice ioTDevice)
  
  getIoTOtaStatus(IoTDevice ioTDevice)
+ 
+ getAccessWifiSSID(IoTDevice ioTDevice)
+ 
+ getAccessWifiRSSI(IoTDevice ioTDevice)
+ 
+ getWifiIPAddress(IoTDevice ioTDevice)
+ 
+ getWifiMacAddress(IoTDevice ioTDevice)
+ 
+ getSourceType(IoTDevice ioTDevice)
  
 ```
 ##### and so on
