@@ -522,6 +522,17 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         device.rebootDevice(callback);
     }
 
+    /**
+     *  Use this method will factory reset for current device (Speaker)
+     *
+     * @param device   current device (Speaker), that you want factory reset
+     *
+     * @param callback completion block to be called asynchronously upon completion (successful or otherwise)
+     */
+    public void factoryReset(IoTDevice device, IoTCompletionCallback callback){
+        device.factoryReset(callback);
+    }
+
     public void startAvsOnBoarding(String host, IoTCompletionCallback callback){
         IoTService.getInstance().startAvsOnBoarding(host, callback);
     }
