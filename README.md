@@ -394,9 +394,7 @@ IoTSysManager.getInstance().removeSourceSwitchListener(this);
      * @param callback completion block to be called asynchronously upon completion (successful or otherwise)
      */
      
-    public void factoryReset(IoTDevice device, IoTCompletionCallback callback){
-        device.factoryReset(callback);
-    }
+    public void factoryReset(IoTDevice device, IoTCompletionCallback callback)
 
 ```
 
