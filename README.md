@@ -381,6 +381,24 @@ IoTSysManager.getInstance().removeSourceSwitchListener(this);
   public void rebootDevice(IoTDevice device, IoTCompletionCallback callback)
 
 ```
+
+##### Factory reset
+
+```java
+   
+     /**
+     *  Use this method will factory reset for current device (Speaker)
+     *
+     * @param device   current device (Speaker), that you want factory reset
+     *
+     * @param callback completion block to be called asynchronously upon completion (successful or otherwise)
+     */
+     
+    public void factoryReset(IoTDevice device, IoTCompletionCallback callback)
+
+```
+
+
 ##### OTA
 
 ```java
