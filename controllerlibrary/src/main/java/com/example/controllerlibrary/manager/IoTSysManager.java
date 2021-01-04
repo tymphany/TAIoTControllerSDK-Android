@@ -601,6 +601,10 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
       return ioTDevice.getSourceType();
     }
 
+    public int getBatteryLevel(IoTDevice ioTDevice){
+      return ioTDevice.getBatteryLevel();
+    }
+
   @Override
   public void didChangeName(IoTDevice device, String name) {
     synchronized (mSystemListeners) {
