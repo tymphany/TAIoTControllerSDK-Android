@@ -14,12 +14,14 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.text.TextUtils;
 
+
 import com.example.controllerlibrary.manager.bleonboarding.bean.TASystem;
 import com.example.controllerlibrary.manager.bleonboarding.bean.WifiBean;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -30,6 +32,7 @@ public class BleEngine {
     private BluetoothGatt mBluetoothGatt = null;
     private static UpdatesDelegate mUpdatesDelegate;
     private Handler workHandler = null;
+    private Map<String, Boolean> notifyRegisterMap = null;
 
     private final BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
         @Override
@@ -84,18 +87,23 @@ public class BleEngine {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
-            if(status == BluetoothGatt.GATT_SUCCESS){
-                byte[] data = characteristic.getValue();
-                int value = (int)data[0];
-                if(value == Constant.WIFI_DISCONNECT){
-                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_DISCONNECT);
-                }else if(value == Constant.WIFI_CONNECTING){
-                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTING);
-                }else if(value == Constant.WIFI_CONNECTED){
-                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTED);
+                if(characteristic.getUuid().equals(UUID.fromString(Constant.ConnectCharacteristicUUID))){
+                    byte[] data = characteristic.getValue();
+                    int value = (int)data[0];
+                    if(value == Constant.WIFI_DISCONNECT){
+                        mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_DISCONNECT);
+                    }else if(value == Constant.WIFI_CONNECTING){
+                        mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTING);
+                    }else if(value == Constant.WIFI_CONNECTED){
+                        mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTED);
+                    }
+                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.SourceSwitchCharacteristicUUID))){
+                    byte[] data = characteristic.getValue();
+                    int type = (int)data[0];
+                    if(type > 0){
+                        mUpdatesDelegate.didUpdateSourceType(type);
+                    }
                 }
-            }
-
         }
 
         @Override
@@ -109,7 +117,6 @@ public class BleEngine {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            registerListener(true, Constant.ConnectCharacteristicUUID);
             if(characteristic.getUuid().equals(UUID.fromString(Constant.ScanCharacteristicUUID))){
                String response = new String(characteristic.getValue());
                if(response != null){
@@ -138,6 +145,12 @@ public class BleEngine {
                }else if(status == Constant.WIFI_CONNECTED){
                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTED);
                }
+            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.SourceSwitchCharacteristicUUID))){
+                byte[] data = characteristic.getValue();
+                int type = (int)data[0];
+                if(type > 0){
+                    mUpdatesDelegate.didUpdateSourceType(type);
+                }
             }
         }
 
@@ -149,7 +162,12 @@ public class BleEngine {
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
-
+            if(status == BluetoothGatt.GATT_SUCCESS){
+                notifyRegisterMap.remove(descriptor.getCharacteristic().getUuid().toString().trim());
+                for(Map.Entry<String,Boolean> entry: notifyRegisterMap.entrySet()){
+                     registerListener(true, entry.getKey());
+                }
+            }
         }
 
         @Override
@@ -176,7 +194,10 @@ public class BleEngine {
         workHandler = new Handler(handlerThread.getLooper());
         final BluetoothManager bluetoothManager = (BluetoothManager) mContext.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
-
+        notifyRegisterMap = new HashMap<>();
+        notifyRegisterMap.put(Constant.ScanCharacteristicUUID, false);
+        notifyRegisterMap.put(Constant.ConnectCharacteristicUUID, false);
+        notifyRegisterMap.put(Constant.SourceSwitchCharacteristicUUID, false);
         if(!mBluetoothAdapter.isEnabled()){
             mBluetoothAdapter.enable();
         }
@@ -276,7 +297,7 @@ public class BleEngine {
         });
     }
 
-    public void write(String ssid, String password, String value, String CharacteristicUUID){
+    public void write(String ssid, String password, byte[] value, String CharacteristicUUID){
         if(mBluetoothGatt == null){
             return;
         }
@@ -285,13 +306,8 @@ public class BleEngine {
             public void run() {
                 BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(Constant.ServiceUUID));
                 if( gattService != null){
-                    if(CharacteristicUUID != null && TextUtils.equals(Constant.ScanCharacteristicUUID, CharacteristicUUID)){
-                        BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(CharacteristicUUID));
-                        if(value != null && gattCharacteristic != null){
-                            gattCharacteristic.setValue(value.getBytes());
-                            mBluetoothGatt.writeCharacteristic(gattCharacteristic);
-                        }
-                    }else if(CharacteristicUUID != null && TextUtils.equals(Constant.ConnectCharacteristicUUID, CharacteristicUUID)){
+
+                    if(CharacteristicUUID != null && TextUtils.equals(Constant.ConnectCharacteristicUUID, CharacteristicUUID)){
                         BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(CharacteristicUUID));
                         if(gattCharacteristic != null){
                               if(ssid != null && password != null){
@@ -305,6 +321,12 @@ public class BleEngine {
                                       e.printStackTrace();
                                   }
                               }
+                        }
+                    }else{
+                        BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(CharacteristicUUID));
+                        if(value != null && gattCharacteristic != null){
+                            gattCharacteristic.setValue(value);
+                            mBluetoothGatt.writeCharacteristic(gattCharacteristic);
                         }
                     }
                 }
@@ -321,13 +343,18 @@ public class BleEngine {
                 BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(CharacteristicUUID));
                 if (gattCharacteristic != null) {
                     mBluetoothGatt.setCharacteristicNotification(gattCharacteristic, isRegister);
+                }else{
+                    return;
                 }
 
                 UUID descriptorUUID = UUID.fromString(Constant.DescriptorUUID);
                 BluetoothGattDescriptor descriptor = gattCharacteristic.getDescriptor(descriptorUUID);
                 if(descriptor != null){
                     descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                    mBluetoothGatt.writeDescriptor(descriptor);
+                    boolean flag = mBluetoothGatt.writeDescriptor(descriptor);
+                    if(!flag){
+                        registerListener(true, CharacteristicUUID);
+                    }
                 }
               }
             }
@@ -339,6 +366,7 @@ public class BleEngine {
         void didUpdateBleConnectStatus(int status);
         void didUpdateLeDevices(TASystem taSystem, int rssi);
         void didUpdateWifiConnectStatus(int status);
+        void didUpdateSourceType(int sourceType);
     }
 }
 
