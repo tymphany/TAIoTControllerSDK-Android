@@ -170,6 +170,47 @@ You should connect device first before start the wifi ble onboard.
 
 **[!!!] Due to current FW limitation, if you input password is right,onboard result will return about 20 seconds after you send ssid and password to device**
 
+##### Source switch via ble
+```java
+
+   /**
+     * Using this method set source to BT
+     *
+     */
+   public void setSourceToBt()
+   
+    /**
+     * Using this method set source to Wifi
+     *
+     */
+   public void setSourceToWifi()
+   
+```
+##### Read source type
+```java
+   /**
+     *  Using this method to get current source type , and the method didUpdateSourceType will call back
+     *
+     * @see onBleListener
+     *
+     */
+    public void readSourceType()
+    
+    
+    /**
+      *  The method will call back current source type when device source type change , or use readSourceType method to read current
+      *
+      *  source type
+      *
+      *  (Note: This method will not call back when use method SetSourceToBt or SetSourceToWifi to set source, due to FW not return. FW will do it in next.
+      *
+      *   If manually trigger a button on the speaker to switch the source, this method will call back)
+      *
+      *  @param sourceType The sourceType value 1 is BT, value 2 is Wifi
+      */
+    void didUpdateSourceType(int sourceType); 
+```
+
 ### IoTSysManager
 
 The `IoTSysManager` class is related to the `IoTDevice` and `IoTService` in the `IOTControllerSDK.IoTSysManager` encapsulates many methods from `IoTDevice`. Only the methods in `IoTSysManager` need to be used during the development process. or you can use `IoTService` and `IoTDevice` methods

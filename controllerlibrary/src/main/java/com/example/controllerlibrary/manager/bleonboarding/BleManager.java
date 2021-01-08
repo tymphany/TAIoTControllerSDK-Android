@@ -110,6 +110,33 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         mBleEngine.read(Constant.ConnectCharacteristicUUID);
     }
 
+
+    /**
+     * Using this method set source to BT
+     *
+     */
+    public void setSourceToBt(){
+        mBleEngine.write(null,null, Constant.SET_SOURCE_BT, Constant.SourceSwitchCharacteristicUUID);
+    }
+
+    /**
+     * Using this method set source to Wifi
+     *
+     */
+    public void setSourceToWifi(){
+        mBleEngine.write(null,null, Constant.SET_SOURCE_WIFI, Constant.SourceSwitchCharacteristicUUID);
+    }
+
+    /**
+     *  Using this method to get current source type , and the method didUpdateSourceType will call back
+     *
+     * @see onBleListener
+     *
+     */
+    public void readSourceType(){
+        mBleEngine.read(Constant.SourceSwitchCharacteristicUUID);
+    }
+
     /**
      * Add BleListener, if have some update the onBleListener interfaces will receive notify
      *
@@ -172,6 +199,15 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         }
     }
 
+    @Override
+    public void didUpdateSourceType(int type) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateSourceType(type);
+            }
+        }
+    }
+
     /**
      * <p>This listener gets events related to the BLE feature and data or Wifi connect status of a device. It informs when any of
      * its state change.</p>
@@ -206,5 +242,18 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          * @param status The status value 0 is disconnect, value 1 is connecting, value 2 is connected
          */
         void didUpdateWifiConnectStatus(int status);
+
+        /**
+         *  The method will call back current source type when device source type change , or use readSourceType method to read current
+         *
+         *  source type
+         *
+         *  (Note: This method will not call back when use method SetSourceToBt or SetSourceToWifi to set source, due to FW not return. FW will do it in next.
+         *
+         *   If manually trigger a button on the speaker to switch the source, this method will call back)
+         *
+         *  @param sourceType The sourceType value 1 is BT, value 2 is Wifi
+         */
+        void didUpdateSourceType(int sourceType);
     }
 }
