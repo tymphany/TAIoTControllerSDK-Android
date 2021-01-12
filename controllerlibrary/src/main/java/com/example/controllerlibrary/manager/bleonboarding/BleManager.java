@@ -84,7 +84,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void readWifiList(){
-        mBleEngine.write(null,null, Constant.WRITE_SCAN_REQUEST, Constant.ScanCharacteristicUUID);
+        mBleEngine.write(null,null, null, Constant.WRITE_SCAN_REQUEST, Constant.ScanCharacteristicUUID);
     }
 
     /**
@@ -97,7 +97,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      * @param passWord will connect wifi password
      */
     public void connectWifi(String ssid, String passWord){
-        mBleEngine.write(ssid, passWord,null, Constant.ConnectCharacteristicUUID);
+        mBleEngine.write(ssid, passWord,null,null, Constant.ConnectCharacteristicUUID);
     }
 
     /**
@@ -116,7 +116,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void setSourceToBt(){
-        mBleEngine.write(null,null, Constant.SET_SOURCE_BT, Constant.SourceSwitchCharacteristicUUID);
+        mBleEngine.write(null,null,null, Constant.SET_SOURCE_BT, Constant.SourceSwitchCharacteristicUUID);
     }
 
     /**
@@ -124,7 +124,15 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void setSourceToWifi(){
-        mBleEngine.write(null,null, Constant.SET_SOURCE_WIFI, Constant.SourceSwitchCharacteristicUUID);
+        mBleEngine.write(null,null, null, Constant.SET_SOURCE_WIFI, Constant.SourceSwitchCharacteristicUUID);
+    }
+
+    public void setDeviceName(String name){
+        mBleEngine.write(null,null, name, null, Constant.SetNameCharacteristicUUID);
+    }
+
+    public void readDeviceName(){
+        mBleEngine.read(Constant.SetNameCharacteristicUUID);
     }
 
     /**
@@ -208,6 +216,15 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         }
     }
 
+    @Override
+    public void didUpdateDeviceName(String deviceName) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateDeviceName(deviceName);
+            }
+        }
+    }
+
     /**
      * <p>This listener gets events related to the BLE feature and data or Wifi connect status of a device. It informs when any of
      * its state change.</p>
@@ -255,5 +272,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          *  @param sourceType The sourceType value 1 is BT, value 2 is Wifi
          */
         void didUpdateSourceType(int sourceType);
+
+        void didUpdateDeviceName(String deviceName);
     }
 }

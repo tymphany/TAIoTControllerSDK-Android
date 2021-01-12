@@ -103,6 +103,11 @@ public class BleEngine {
                     if(type > 0){
                         mUpdatesDelegate.didUpdateSourceType(type);
                     }
+                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.SetNameCharacteristicUUID))){
+                    String deviceName = new String(characteristic.getValue());
+                    if(deviceName != null){
+                        mUpdatesDelegate.didUpdateDeviceName(deviceName);
+                    }
                 }
         }
 
@@ -297,7 +302,7 @@ public class BleEngine {
         });
     }
 
-    public void write(String ssid, String password, byte[] value, String CharacteristicUUID){
+    public void write(String ssid, String password, String strValue, byte[] value, String CharacteristicUUID){
         if(mBluetoothGatt == null){
             return;
         }
@@ -326,6 +331,9 @@ public class BleEngine {
                         BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(CharacteristicUUID));
                         if(value != null && gattCharacteristic != null){
                             gattCharacteristic.setValue(value);
+                            mBluetoothGatt.writeCharacteristic(gattCharacteristic);
+                        }else if(strValue != null && gattCharacteristic != null){
+                            gattCharacteristic.setValue(strValue.trim().getBytes());
                             mBluetoothGatt.writeCharacteristic(gattCharacteristic);
                         }
                     }
@@ -367,6 +375,7 @@ public class BleEngine {
         void didUpdateLeDevices(TASystem taSystem, int rssi);
         void didUpdateWifiConnectStatus(int status);
         void didUpdateSourceType(int sourceType);
+        void didUpdateDeviceName(String deviceName);
     }
 }
 
