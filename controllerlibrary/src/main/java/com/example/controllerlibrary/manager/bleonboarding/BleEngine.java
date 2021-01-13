@@ -156,6 +156,11 @@ public class BleEngine {
                 if(type > 0){
                     mUpdatesDelegate.didUpdateSourceType(type);
                 }
+            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.SetNameCharacteristicUUID))){
+                String deviceName = new String(characteristic.getValue());
+                if(deviceName != null){
+                    mUpdatesDelegate.didUpdateDeviceName(deviceName);
+                }
             }
         }
 
@@ -203,6 +208,7 @@ public class BleEngine {
         notifyRegisterMap.put(Constant.ScanCharacteristicUUID, false);
         notifyRegisterMap.put(Constant.ConnectCharacteristicUUID, false);
         notifyRegisterMap.put(Constant.SourceSwitchCharacteristicUUID, false);
+        notifyRegisterMap.put(Constant.SetNameCharacteristicUUID, false);
         if(!mBluetoothAdapter.isEnabled()){
             mBluetoothAdapter.enable();
         }
