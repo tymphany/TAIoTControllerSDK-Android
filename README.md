@@ -210,6 +210,34 @@ You should connect device first before start the wifi ble onboard.
       */
     void didUpdateSourceType(int sourceType); 
 ```
+##### Set device name
+```java
+   /**
+     *  Using this method will change name of current device
+     *
+     * @param name  Will set name that want to change of current device
+     */
+    public void setDeviceName(String name)
+```
+##### Read device name
+```java
+  /**
+    *  Using this method will get name of current device, and the method didUpdateDeviceName will call back
+    *
+    */
+  public void readDeviceName()
+  
+  
+  /**
+    *  This method will call back when use readDeviceName method to get device name
+    *
+    *
+    * @param deviceName  The device name of current device
+    */
+  void didUpdateDeviceName(String deviceName); 
+
+```
+
 
 ### IoTSysManager
 
