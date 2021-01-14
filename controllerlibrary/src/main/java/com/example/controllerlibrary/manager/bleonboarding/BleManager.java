@@ -84,7 +84,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void readWifiList(){
-        mBleEngine.write(null,null, Constant.WRITE_SCAN_REQUEST, Constant.ScanCharacteristicUUID);
+        mBleEngine.write(null,null, null, Constant.WRITE_SCAN_REQUEST, Constant.ScanCharacteristicUUID);
     }
 
     /**
@@ -97,7 +97,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      * @param passWord will connect wifi password
      */
     public void connectWifi(String ssid, String passWord){
-        mBleEngine.write(ssid, passWord,null, Constant.ConnectCharacteristicUUID);
+        mBleEngine.write(ssid, passWord,null,null, Constant.ConnectCharacteristicUUID);
     }
 
     /**
@@ -116,7 +116,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void setSourceToBt(){
-        mBleEngine.write(null,null, Constant.SET_SOURCE_BT, Constant.SourceSwitchCharacteristicUUID);
+        mBleEngine.write(null,null,null, Constant.SET_SOURCE_BT, Constant.SourceSwitchCharacteristicUUID);
     }
 
     /**
@@ -124,7 +124,24 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void setSourceToWifi(){
-        mBleEngine.write(null,null, Constant.SET_SOURCE_WIFI, Constant.SourceSwitchCharacteristicUUID);
+        mBleEngine.write(null,null, null, Constant.SET_SOURCE_WIFI, Constant.SourceSwitchCharacteristicUUID);
+    }
+
+    /**
+     *  Using this method will change name of current device
+     *
+     * @param name  Will set name that want to change of current device
+     */
+    public void setDeviceName(String name){
+        mBleEngine.write(null,null, name, null, Constant.SetNameCharacteristicUUID);
+    }
+
+    /**
+     *  Using this method will get name of current device, and the method didUpdateDeviceName will call back
+     *
+     */
+    public void readDeviceName(){
+        mBleEngine.read(Constant.SetNameCharacteristicUUID);
     }
 
     /**
@@ -208,6 +225,15 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         }
     }
 
+    @Override
+    public void didUpdateDeviceName(String deviceName) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateDeviceName(deviceName);
+            }
+        }
+    }
+
     /**
      * <p>This listener gets events related to the BLE feature and data or Wifi connect status of a device. It informs when any of
      * its state change.</p>
@@ -248,12 +274,20 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          *
          *  source type
          *
-         *  (Note: This method will not call back when use method SetSourceToBt or SetSourceToWifi to set source, due to FW not return. FW will do it in next.
+         *  (Note: This method will not call back when use method setSourceToBt or setSourceToWifi to set source, due to FW not return. FW will do it in next.
          *
          *   If manually trigger a button on the speaker to switch the source, this method will call back)
          *
          *  @param sourceType The sourceType value 1 is BT, value 2 is Wifi
          */
         void didUpdateSourceType(int sourceType);
+
+        /**
+         *  This method will call back when use readDeviceName method to get device name
+         *
+         *
+         * @param deviceName  The device name of current device
+         */
+        void didUpdateDeviceName(String deviceName);
     }
 }

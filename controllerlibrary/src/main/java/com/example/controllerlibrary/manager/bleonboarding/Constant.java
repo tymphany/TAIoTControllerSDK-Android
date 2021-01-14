@@ -14,5 +14,6 @@ public class Constant {
     public static final String ScanCharacteristicUUID = "0000aa01-0000-1000-8000-008012340001";
     public static final String ConnectCharacteristicUUID = "0000aa01-0000-1000-8000-008012340000";
     public static final String SourceSwitchCharacteristicUUID = "0000aa01-0000-1000-8000-008012340002";
+    public static final String SetNameCharacteristicUUID = "0000aa01-0000-1000-8000-008012340003";
     public static final String DescriptorUUID = "00002902-0000-1000-8000-00805f9b34fb";
 }
