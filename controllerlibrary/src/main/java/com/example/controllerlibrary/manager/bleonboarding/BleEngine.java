@@ -32,7 +32,7 @@ public class BleEngine {
     private BluetoothGatt mBluetoothGatt = null;
     private static UpdatesDelegate mUpdatesDelegate;
     private Handler workHandler = null;
-    private Map<String, Boolean> notifyRegisterMap = null;
+    private Map<String, String> notifyRegisterMap = null;
 
     private final BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
         @Override
@@ -68,7 +68,7 @@ public class BleEngine {
                     @Override
                     public void run() {
                         mBluetoothGatt.discoverServices();
-                        registerListener(true, Constant.ScanCharacteristicUUID);
+                        registerListener(true, Constant.CustomAudioControlServiceUUID, Constant.ScanCharacteristicUUID);
                         mUpdatesDelegate.didUpdateBleConnectStatus(newState);
                     }
                 },1000L);
@@ -107,6 +107,17 @@ public class BleEngine {
                     String deviceName = new String(characteristic.getValue());
                     if(deviceName != null){
                         mUpdatesDelegate.didUpdateDeviceName(deviceName);
+                    }
+                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.DeviceInfoFirmwareVersionCharacteristicUUID))){
+                    String firmwareVersion = new String(characteristic.getValue());
+                    if(firmwareVersion != null){
+                        mUpdatesDelegate.didUpdateFirmwareVersion(firmwareVersion);
+                    }
+                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.BatteryLevelCharacteristicUUID))){
+                    byte[] data = characteristic.getValue();
+                    int batteryLevel = (int)data[0];
+                    if(batteryLevel > -1){
+                        mUpdatesDelegate.didUpdateBatteryLevel(batteryLevel);
                     }
                 }
         }
@@ -161,6 +172,12 @@ public class BleEngine {
                 if(deviceName != null){
                     mUpdatesDelegate.didUpdateDeviceName(deviceName);
                 }
+            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.BatteryLevelCharacteristicUUID))){
+                byte[] data = characteristic.getValue();
+                int batteryLevel = (int)data[0];
+                if(batteryLevel > -1){
+                    mUpdatesDelegate.didUpdateBatteryLevel(batteryLevel);
+                }
             }
         }
 
@@ -174,8 +191,8 @@ public class BleEngine {
             super.onDescriptorWrite(gatt, descriptor, status);
             if(status == BluetoothGatt.GATT_SUCCESS){
                 notifyRegisterMap.remove(descriptor.getCharacteristic().getUuid().toString().trim());
-                for(Map.Entry<String,Boolean> entry: notifyRegisterMap.entrySet()){
-                     registerListener(true, entry.getKey());
+                for(Map.Entry<String,String> entry: notifyRegisterMap.entrySet()){
+                     registerListener(true, entry.getValue(), entry.getKey());
                 }
             }
         }
@@ -205,10 +222,11 @@ public class BleEngine {
         final BluetoothManager bluetoothManager = (BluetoothManager) mContext.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
         notifyRegisterMap = new HashMap<>();
-        notifyRegisterMap.put(Constant.ScanCharacteristicUUID, false);
-        notifyRegisterMap.put(Constant.ConnectCharacteristicUUID, false);
-        notifyRegisterMap.put(Constant.SourceSwitchCharacteristicUUID, false);
-        notifyRegisterMap.put(Constant.SetNameCharacteristicUUID, false);
+        notifyRegisterMap.put(Constant.ScanCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
+        notifyRegisterMap.put(Constant.ConnectCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
+        notifyRegisterMap.put(Constant.SourceSwitchCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
+        notifyRegisterMap.put(Constant.SetNameCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
+        notifyRegisterMap.put(Constant.BatteryLevelCharacteristicUUID, Constant.BatteryInfoServiceUUID);
         if(!mBluetoothAdapter.isEnabled()){
             mBluetoothAdapter.enable();
         }
@@ -290,16 +308,16 @@ public class BleEngine {
         });
     }
 
-    public void read(String CharacteristicUUID){
+    public void read(String serviceUUID, String characteristicUUID){
         if(mBluetoothGatt == null){
           return;
         }
         workHandler.post(new Runnable() {
             @Override
             public void run() {
-                BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(Constant.ServiceUUID));
+                BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(serviceUUID));
                 if(gattService != null){
-                    BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(CharacteristicUUID));
+                    BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(characteristicUUID));
                     if(gattCharacteristic != null){
                         mBluetoothGatt.readCharacteristic(gattCharacteristic);
                     }
@@ -315,7 +333,7 @@ public class BleEngine {
         workHandler.post(new Runnable() {
             @Override
             public void run() {
-                BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(Constant.ServiceUUID));
+                BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(Constant.CustomAudioControlServiceUUID));
                 if( gattService != null){
 
                     if(CharacteristicUUID != null && TextUtils.equals(Constant.ConnectCharacteristicUUID, CharacteristicUUID)){
@@ -348,13 +366,13 @@ public class BleEngine {
         });
     }
 
-    public void registerListener(boolean isRegister, String CharacteristicUUID){
+    public void registerListener(boolean isRegister, String serviceUUID, String characteristicUUID){
         workHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-              BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(Constant.ServiceUUID));
+              BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(serviceUUID));
              if( gattService != null) {
-                BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(CharacteristicUUID));
+                BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(characteristicUUID));
                 if (gattCharacteristic != null) {
                     mBluetoothGatt.setCharacteristicNotification(gattCharacteristic, isRegister);
                 }else{
@@ -367,7 +385,7 @@ public class BleEngine {
                     descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                     boolean flag = mBluetoothGatt.writeDescriptor(descriptor);
                     if(!flag){
-                        registerListener(true, CharacteristicUUID);
+                        registerListener(true, serviceUUID, characteristicUUID);
                     }
                 }
               }
@@ -382,6 +400,10 @@ public class BleEngine {
         void didUpdateWifiConnectStatus(int status);
         void didUpdateSourceType(int sourceType);
         void didUpdateDeviceName(String deviceName);
+        void didUpdateFirmwareVersion(String firmwareVersion);
+        void didUpdateBatteryLevel(int batteryLevel);
     }
+
+
 }
 

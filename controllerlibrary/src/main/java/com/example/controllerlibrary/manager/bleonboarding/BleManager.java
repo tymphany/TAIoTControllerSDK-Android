@@ -107,7 +107,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void readWifiConnectStatus(){
-        mBleEngine.read(Constant.ConnectCharacteristicUUID);
+        mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.ConnectCharacteristicUUID);
     }
 
 
@@ -141,7 +141,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void readDeviceName(){
-        mBleEngine.read(Constant.SetNameCharacteristicUUID);
+        mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.SetNameCharacteristicUUID);
     }
 
     /**
@@ -151,7 +151,15 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void readSourceType(){
-        mBleEngine.read(Constant.SourceSwitchCharacteristicUUID);
+        mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.SourceSwitchCharacteristicUUID);
+    }
+
+    public void readFirmwareVersion(){
+        mBleEngine.read(Constant.DeviceInfoServiceUUID, Constant.DeviceInfoFirmwareVersionCharacteristicUUID);
+    }
+
+    public void readBatteryLevel(){
+        mBleEngine.read(Constant.BatteryInfoServiceUUID, Constant.BatteryLevelCharacteristicUUID);
     }
 
     /**
@@ -234,6 +242,24 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         }
     }
 
+    @Override
+    public void didUpdateFirmwareVersion(String firmwareVersion) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateFirmwareVersion(firmwareVersion);
+            }
+        }
+    }
+
+    @Override
+    public void didUpdateBatteryLevel(int batteryLevel) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateBatteryLevel(batteryLevel);
+            }
+        }
+    }
+
     /**
      * <p>This listener gets events related to the BLE feature and data or Wifi connect status of a device. It informs when any of
      * its state change.</p>
@@ -289,5 +315,8 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          * @param deviceName  The device name of current device
          */
         void didUpdateDeviceName(String deviceName);
+
+        void didUpdateFirmwareVersion(String firmwareVersion);
+        void didUpdateBatteryLevel(int batteryLevel);
     }
 }
