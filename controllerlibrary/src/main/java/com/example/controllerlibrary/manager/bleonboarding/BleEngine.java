@@ -119,6 +119,14 @@ public class BleEngine {
                     if(batteryLevel > -1){
                         mUpdatesDelegate.didUpdateBatteryLevel(batteryLevel);
                     }
+                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.LedControlCharacteristicUUID))){
+                    byte[] data = characteristic.getValue();
+                    int ledPattern = (int)data[0];
+                    int ledAnimation = (int)data[1];
+                    if(ledPattern > -1 || ledAnimation > -1){
+                        mUpdatesDelegate.didUpdateLedPattern(ledPattern);
+                        mUpdatesDelegate.didUpdateLedAnimation(ledAnimation);
+                    }
                 }
         }
 
@@ -178,6 +186,14 @@ public class BleEngine {
                 if(batteryLevel > -1){
                     mUpdatesDelegate.didUpdateBatteryLevel(batteryLevel);
                 }
+            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.LedControlCharacteristicUUID))){
+                byte[] data = characteristic.getValue();
+                int ledPattern = (int)data[0];
+                int ledAnimation = (int)data[1];
+                if(ledPattern > -1 || ledAnimation > -1){
+                    mUpdatesDelegate.didUpdateLedPattern(ledPattern);
+                    mUpdatesDelegate.didUpdateLedAnimation(ledAnimation);
+                }
             }
         }
 
@@ -227,6 +243,7 @@ public class BleEngine {
         notifyRegisterMap.put(Constant.SourceSwitchCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
         notifyRegisterMap.put(Constant.SetNameCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
         notifyRegisterMap.put(Constant.BatteryLevelCharacteristicUUID, Constant.BatteryInfoServiceUUID);
+        notifyRegisterMap.put(Constant.LedControlCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
         if(!mBluetoothAdapter.isEnabled()){
             mBluetoothAdapter.enable();
         }
@@ -402,6 +419,8 @@ public class BleEngine {
         void didUpdateDeviceName(String deviceName);
         void didUpdateFirmwareVersion(String firmwareVersion);
         void didUpdateBatteryLevel(int batteryLevel);
+        void didUpdateLedAnimation(int ledAnimation);
+        void didUpdateLedPattern(int ledPattern);
     }
 
 

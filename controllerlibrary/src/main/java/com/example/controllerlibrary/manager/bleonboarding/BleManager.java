@@ -136,6 +136,20 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         mBleEngine.write(null,null, name, null, Constant.SetNameCharacteristicUUID);
     }
 
+    public void setLedPattern(int ledPattern){
+        byte[] data = new byte[2];
+        data[0] = 0x00;
+        data[1] = (byte)ledPattern;
+        mBleEngine.write(null,null,null, data, Constant.LedControlCharacteristicUUID);
+    }
+
+    public void setLedAnimation(int ledAnimation){
+        byte[] data = new byte[2];
+        data[0] = 0x01;
+        data[1] = (byte)ledAnimation;
+        mBleEngine.write(null,null,null, data, Constant.LedControlCharacteristicUUID);
+    }
+
     /**
      *  Using this method will get name of current device, and the method didUpdateDeviceName will call back
      *
@@ -160,6 +174,10 @@ public class BleManager implements BleEngine.UpdatesDelegate{
 
     public void readBatteryLevel(){
         mBleEngine.read(Constant.BatteryInfoServiceUUID, Constant.BatteryLevelCharacteristicUUID);
+    }
+
+    public void readLedPatternAndAnimation(){
+        mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.LedControlCharacteristicUUID);
     }
 
     /**
@@ -260,6 +278,24 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         }
     }
 
+    @Override
+    public void didUpdateLedAnimation(int ledAnimation) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateLedAnimation(ledAnimation);
+            }
+        }
+    }
+
+    @Override
+    public void didUpdateLedPattern(int ledPattern) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateLedPattern(ledPattern);
+            }
+        }
+    }
+
     /**
      * <p>This listener gets events related to the BLE feature and data or Wifi connect status of a device. It informs when any of
      * its state change.</p>
@@ -318,5 +354,8 @@ public class BleManager implements BleEngine.UpdatesDelegate{
 
         void didUpdateFirmwareVersion(String firmwareVersion);
         void didUpdateBatteryLevel(int batteryLevel);
+
+        void didUpdateLedAnimation(int ledAnimation);
+        void didUpdateLedPattern(int ledPattern);
     }
 }
