@@ -64,14 +64,14 @@ public class BleEngine {
             if(newState == BluetoothProfile.STATE_CONNECTED){
                 mBluetoothGatt.requestMtu(517);
                 stopLeScan();
+                mBluetoothGatt.discoverServices();
+                registerListener(true, Constant.CustomAudioControlServiceUUID, Constant.ScanCharacteristicUUID);
                 workHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        mBluetoothGatt.discoverServices();
-                        registerListener(true, Constant.CustomAudioControlServiceUUID, Constant.ScanCharacteristicUUID);
                         mUpdatesDelegate.didUpdateBleConnectStatus(newState);
                     }
-                },1000L);
+                },3000L);
             }else if(newState == BluetoothProfile.STATE_DISCONNECTING){
                 mUpdatesDelegate.didUpdateBleConnectStatus(newState);
             }else if(newState == BluetoothProfile.STATE_DISCONNECTED){
