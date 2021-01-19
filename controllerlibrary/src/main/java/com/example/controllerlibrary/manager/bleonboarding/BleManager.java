@@ -136,6 +136,11 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         mBleEngine.write(null,null, name, null, Constant.SetNameCharacteristicUUID);
     }
 
+    /**
+     * Use this method will set led pattern that you want
+     *
+     * @param ledPattern The led pattern want to set, the value is 0 to 5 and 10
+     */
     public void setLedPattern(int ledPattern){
         byte[] data = new byte[2];
         data[0] = 0x00;
@@ -143,6 +148,11 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         mBleEngine.write(null,null,null, data, Constant.LedControlCharacteristicUUID);
     }
 
+    /**
+     * Use this method will set led animation that you want
+     *
+     * @param ledAnimation The led animation want to set, the value is 0 to 3
+     */
     public void setLedAnimation(int ledAnimation){
         byte[] data = new byte[2];
         data[0] = 0x01;
@@ -168,14 +178,32 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.SourceSwitchCharacteristicUUID);
     }
 
+    /**
+     *  Using this method to get firmware version , and the method didUpdateFirmwareVersion will call back
+     *
+     * @see onBleListener
+     *
+     */
     public void readFirmwareVersion(){
         mBleEngine.read(Constant.DeviceInfoServiceUUID, Constant.DeviceInfoFirmwareVersionCharacteristicUUID);
     }
 
+    /**
+     *  Using this method to get current battery level , and the method didUpdateBatteryLevel will call back
+     *
+     * @see onBleListener
+     *
+     */
     public void readBatteryLevel(){
         mBleEngine.read(Constant.BatteryInfoServiceUUID, Constant.BatteryLevelCharacteristicUUID);
     }
 
+    /**
+     *  Using this method to get led pattern and animation, both method didUpdateLedAnimation and method didUpdateLedPattern will call back
+     *
+     * @see onBleListener
+     *
+     */
     public void readLedPatternAndAnimation(){
         mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.LedControlCharacteristicUUID);
     }
@@ -352,10 +380,34 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          */
         void didUpdateDeviceName(String deviceName);
 
+        /**
+         *  This method will call back when use readFirmwareVersion method to get firmware version
+         *
+         *
+         * @param firmwareVersion  The firmware version of current device
+         */
         void didUpdateFirmwareVersion(String firmwareVersion);
+
+        /**
+         *  This method will call back when use readBatteryLevel method to get battery level
+         *
+         *
+         * @param batteryLevel  The battery level of current device
+         */
         void didUpdateBatteryLevel(int batteryLevel);
 
+        /**
+         *  This method will call back when led animation changed or using readLedPatternAndAnimation method get led animation and pattern
+         *
+         * @param ledAnimation The led animation value of current device
+         */
         void didUpdateLedAnimation(int ledAnimation);
+
+        /**
+         *  This method will call back when led pattern changed or using readLedPatternAndAnimation method get led animation and pattern
+         *
+         * @param ledPattern The led pattern value of current device
+         */
         void didUpdateLedPattern(int ledPattern);
     }
 }
