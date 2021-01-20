@@ -1,6 +1,9 @@
 package com.example.controllerlibrary.manager.bleonboarding;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.HandlerThread;
+
 import com.example.controllerlibrary.manager.bleonboarding.bean.TASystem;
 import com.example.controllerlibrary.manager.bleonboarding.bean.WifiBean;
 
@@ -13,6 +16,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     private static volatile BleManager instance;
     private BleEngine mBleEngine;
     private final List<onBleListener> mOnBleListeners = new ArrayList<>();
+    private Handler workHandler = null;
 
     private BleManager (){}
 
@@ -37,6 +41,9 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         BleEngine.setDelegate(instance);
         mBleEngine = new BleEngine();
         mBleEngine.init(context);
+        HandlerThread handlerThread = new HandlerThread("Ble work");
+        handlerThread.start();
+        workHandler = new Handler(handlerThread.getLooper());
     }
 
     /**
@@ -246,7 +253,16 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     public void didUpdateBleConnectStatus(int status) {
         synchronized (mOnBleListeners){
             for(onBleListener listener : mOnBleListeners){
-                listener.didUpdateBleConnectStatus(status);
+                if(status == 2){
+                    workHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.didUpdateBleConnectStatus(status);
+                        }
+                    },3000L);
+                }else{
+                    listener.didUpdateBleConnectStatus(status);
+                }
             }
         }
     }
