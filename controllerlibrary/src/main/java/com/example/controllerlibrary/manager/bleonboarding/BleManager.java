@@ -1,6 +1,9 @@
 package com.example.controllerlibrary.manager.bleonboarding;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.HandlerThread;
+
 import com.example.controllerlibrary.manager.bleonboarding.bean.TASystem;
 import com.example.controllerlibrary.manager.bleonboarding.bean.WifiBean;
 
@@ -13,6 +16,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     private static volatile BleManager instance;
     private BleEngine mBleEngine;
     private final List<onBleListener> mOnBleListeners = new ArrayList<>();
+    private Handler workHandler = null;
 
     private BleManager (){}
 
@@ -37,6 +41,9 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         BleEngine.setDelegate(instance);
         mBleEngine = new BleEngine();
         mBleEngine.init(context);
+        HandlerThread handlerThread = new HandlerThread("Ble work");
+        handlerThread.start();
+        workHandler = new Handler(handlerThread.getLooper());
     }
 
     /**
@@ -107,7 +114,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void readWifiConnectStatus(){
-        mBleEngine.read(Constant.ConnectCharacteristicUUID);
+        mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.ConnectCharacteristicUUID);
     }
 
 
@@ -137,11 +144,35 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     }
 
     /**
+     * Use this method will set led pattern that you want
+     *
+     * @param ledPattern The led pattern want to set, the value is 0 to 5 and 10
+     */
+    public void setLedPattern(int ledPattern){
+        byte[] data = new byte[2];
+        data[0] = 0x00;
+        data[1] = (byte)ledPattern;
+        mBleEngine.write(null,null,null, data, Constant.LedControlCharacteristicUUID);
+    }
+
+    /**
+     * Use this method will set led animation that you want
+     *
+     * @param ledAnimation The led animation want to set, the value is 0 to 3
+     */
+    public void setLedAnimation(int ledAnimation){
+        byte[] data = new byte[2];
+        data[0] = 0x01;
+        data[1] = (byte)ledAnimation;
+        mBleEngine.write(null,null,null, data, Constant.LedControlCharacteristicUUID);
+    }
+
+    /**
      *  Using this method will get name of current device, and the method didUpdateDeviceName will call back
      *
      */
     public void readDeviceName(){
-        mBleEngine.read(Constant.SetNameCharacteristicUUID);
+        mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.SetNameCharacteristicUUID);
     }
 
     /**
@@ -151,7 +182,37 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *
      */
     public void readSourceType(){
-        mBleEngine.read(Constant.SourceSwitchCharacteristicUUID);
+        mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.SourceSwitchCharacteristicUUID);
+    }
+
+    /**
+     *  Using this method to get firmware version , and the method didUpdateFirmwareVersion will call back
+     *
+     * @see onBleListener
+     *
+     */
+    public void readFirmwareVersion(){
+        mBleEngine.read(Constant.DeviceInfoServiceUUID, Constant.DeviceInfoFirmwareVersionCharacteristicUUID);
+    }
+
+    /**
+     *  Using this method to get current battery level , and the method didUpdateBatteryLevel will call back
+     *
+     * @see onBleListener
+     *
+     */
+    public void readBatteryLevel(){
+        mBleEngine.read(Constant.BatteryInfoServiceUUID, Constant.BatteryLevelCharacteristicUUID);
+    }
+
+    /**
+     *  Using this method to get led pattern and animation, both method didUpdateLedAnimation and method didUpdateLedPattern will call back
+     *
+     * @see onBleListener
+     *
+     */
+    public void readLedPatternAndAnimation(){
+        mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.LedControlCharacteristicUUID);
     }
 
     /**
@@ -192,7 +253,16 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     public void didUpdateBleConnectStatus(int status) {
         synchronized (mOnBleListeners){
             for(onBleListener listener : mOnBleListeners){
-                listener.didUpdateBleConnectStatus(status);
+                if(status == 2){
+                    workHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            listener.didUpdateBleConnectStatus(status);
+                        }
+                    },3000L);
+                }else{
+                    listener.didUpdateBleConnectStatus(status);
+                }
             }
         }
     }
@@ -230,6 +300,42 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         synchronized (mOnBleListeners){
             for (onBleListener listener : mOnBleListeners){
                 listener.didUpdateDeviceName(deviceName);
+            }
+        }
+    }
+
+    @Override
+    public void didUpdateFirmwareVersion(String firmwareVersion) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateFirmwareVersion(firmwareVersion);
+            }
+        }
+    }
+
+    @Override
+    public void didUpdateBatteryLevel(int batteryLevel) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateBatteryLevel(batteryLevel);
+            }
+        }
+    }
+
+    @Override
+    public void didUpdateLedAnimation(int ledAnimation) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateLedAnimation(ledAnimation);
+            }
+        }
+    }
+
+    @Override
+    public void didUpdateLedPattern(int ledPattern) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateLedPattern(ledPattern);
             }
         }
     }
@@ -289,5 +395,35 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          * @param deviceName  The device name of current device
          */
         void didUpdateDeviceName(String deviceName);
+
+        /**
+         *  This method will call back when use readFirmwareVersion method to get firmware version
+         *
+         *
+         * @param firmwareVersion  The firmware version of current device
+         */
+        void didUpdateFirmwareVersion(String firmwareVersion);
+
+        /**
+         *  This method will call back when use readBatteryLevel method to get battery level
+         *
+         *
+         * @param batteryLevel  The battery level of current device
+         */
+        void didUpdateBatteryLevel(int batteryLevel);
+
+        /**
+         *  This method will call back when led animation changed or using readLedPatternAndAnimation method get led animation and pattern
+         *
+         * @param ledAnimation The led animation value of current device
+         */
+        void didUpdateLedAnimation(int ledAnimation);
+
+        /**
+         *  This method will call back when led pattern changed or using readLedPatternAndAnimation method get led animation and pattern
+         *
+         * @param ledPattern The led pattern value of current device
+         */
+        void didUpdateLedPattern(int ledPattern);
     }
 }

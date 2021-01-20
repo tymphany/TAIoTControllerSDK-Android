@@ -237,6 +237,86 @@ You should connect device first before start the wifi ble onboard.
   void didUpdateDeviceName(String deviceName); 
 
 ```
+##### Read Firmware version
+```java
+   /**
+     *  Using this method to get firmware version , and the method didUpdateFirmwareVersion will call back
+     *
+     * @see onBleListener
+     *
+     */
+    public void readFirmwareVersion()
+    
+    /**
+      *  This method will call back when use readFirmwareVersion method to get firmware version
+      *
+      *
+      * @param firmwareVersion  The firmware version of current device
+      */
+    void didUpdateFirmwareVersion(String firmwareVersion);
+
+```
+##### Read Battery level
+```java
+  /**
+    *  Using this method to get current battery level , and the method didUpdateBatteryLevel will call back
+    *
+    * @see onBleListener
+    *
+    */
+  public void readBatteryLevel()
+  
+  /**
+    *  This method will call back when use readBatteryLevel method to get battery level
+    *
+    *
+    * @param batteryLevel  The battery level of current device
+    */
+  void didUpdateBatteryLevel(int batteryLevel); 
+```
+##### Read led pattern and animation
+```java
+ /**
+   * Using this method to get led pattern and animation, both method didUpdateLedAnimation and method didUpdateLedPattern will call back
+   *
+   * @see onBleListener
+   *
+   */
+  public void readLedPatternAndAnimation()
+  
+  
+ /**
+   *  This method will call back when use readBatteryLevel method to get battery level
+   *
+   *
+   * @param batteryLevel  The battery level of current device
+   */
+  void didUpdateBatteryLevel(int batteryLevel);
+
+ /**
+   *  This method will call back when led animation changed or using readLedPatternAndAnimation method get led animation and pattern
+   *
+   * @param ledAnimation The led animation value of current device
+   */
+   void didUpdateLedAnimation(int ledAnimation);
+```
+##### Set led pattern and animation
+```java
+   /**
+     * Use this method will set led pattern that you want
+     *
+     * @param ledPattern The led pattern want to set, the value is 0 to 5 and 10
+     */
+ public void setLedPattern(int ledPattern)
+ 
+   /**
+     * Use this method will set led animation that you want
+     *
+     * @param ledAnimation The led animation want to set, the value is 0 to 3
+     */
+ public void setLedAnimation(int ledAnimation)
+
+```
 
 
 ### IoTSysManager
@@ -340,7 +420,7 @@ IoTSysManager.getInstance().removeSourceSwitchListener(this);
      *  Use this method will set led pattern that you want
      *
      * @param device   Current device (Speaker) , you want to change led pattern's device
-     * @param ledPattern  The led pattern want to set, the value is 0 to 10
+     * @param ledPattern  The led pattern want to set, the value is 0 to 5 and 10
      * @param callback  Call back if you change success
      */
   public void setLedPattern(IoTDevice device, int ledPattern, IoTCompletionCallback callback)
@@ -352,7 +432,7 @@ IoTSysManager.getInstance().removeSourceSwitchListener(this);
        * @param device
        *              The IoT device for which the state has changed.
        * @param ledPattern
-       *              The led pattern will be define on FW side, the pattern value is 0 to 10
+       *              The led pattern will be define on FW side, the pattern value is 0 to 5 and 10
        */
    void deviceDidChangeLedPattern(IoTDevice device, int ledPattern);
    
@@ -361,7 +441,7 @@ IoTSysManager.getInstance().removeSourceSwitchListener(this);
      *  Use this method will set led animation that you want
      *
      * @param device   Current device (Speaker) , you want to change led animation's device
-     * @param ledAnimation  The led animation want to set, the value is 0 to 2
+     * @param ledAnimation  The led animation want to set, the value is 0 to 3
      * @param callback  Call back if you change success
      */
   public void setLedAnimation(IoTDevice device, int ledAnimation, IoTCompletionCallback callback)
@@ -372,7 +452,7 @@ IoTSysManager.getInstance().removeSourceSwitchListener(this);
     * @param device
     *              The IoT device for which the state has changed.
     * @param ledAnimation
-    *              The led animation will be define on FW side, the animation value is 0 to 2
+    *              The led animation will be define on FW side, the animation value is 0 to 3
     */
   void deviceDidChangeLedAnimation(IoTDevice device, int ledAnimation);
   

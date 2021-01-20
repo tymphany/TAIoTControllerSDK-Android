@@ -431,7 +431,7 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
      *  Use this method will set led pattern that you want
      *
      * @param device   Current device (Speaker) , you want to change led pattern's device
-     * @param ledPattern  The led pattern want to set, the value is 0 to 10
+     * @param ledPattern  The led pattern want to set, the value is 0 to 5 and 10
      * @param callback  Call back if you change success
      */
   public void setLedPattern(IoTDevice device, int ledPattern, IoTCompletionCallback callback){
@@ -442,7 +442,7 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
      *  Use this method will set led animation that you want
      *
      * @param device   Current device (Speaker) , you want to change led animation's device
-     * @param ledAnimation  The led animation want to set, the value is 0 to 2
+     * @param ledAnimation  The led animation want to set, the value is 0 to 3
      * @param callback  Call back if you change success
      */
   public void setLedAnimation(IoTDevice device, int ledAnimation, IoTCompletionCallback callback){
