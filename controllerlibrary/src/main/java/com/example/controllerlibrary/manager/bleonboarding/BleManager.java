@@ -419,7 +419,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         /**
          * The method will call back wifi connect status when choice wifi to connect
          *
-         * @param status The status value 0 is disconnect, value 1 is connecting, value 2 is connected
+         * @param status The status value 0 is disconnect, value 1 is connecting, value 2 is connected, value -128 is connect timeout
          */
         void didUpdateWifiConnectStatus(int status);
 

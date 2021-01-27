@@ -33,6 +33,7 @@ public class BleEngine {
     private static UpdatesDelegate mUpdatesDelegate;
     private Handler workHandler = null;
     private Map<String, String> notifyRegisterMap = null;
+    private boolean notifyDataRegisterFlag = false;
 
     private final BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
         @Override
@@ -69,7 +70,6 @@ public class BleEngine {
                     public void run() {
                         mBluetoothGatt.discoverServices();
                         registerListener(true, Constant.CustomAudioControlServiceUUID, Constant.ScanCharacteristicUUID);
-                        mUpdatesDelegate.didUpdateBleConnectStatus(newState);
                     }
                 },1000L);
             }else if(newState == BluetoothProfile.STATE_DISCONNECTING){
@@ -187,6 +187,8 @@ public class BleEngine {
                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTING);
                }else if(status == Constant.WIFI_CONNECTED){
                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTED);
+               }else{
+                   mUpdatesDelegate.didUpdateBleConnectStatus(status);
                }
             }else if(characteristic.getUuid().equals(UUID.fromString(Constant.SourceSwitchCharacteristicUUID))){
                 byte[] data = characteristic.getValue();
@@ -226,6 +228,13 @@ public class BleEngine {
             super.onDescriptorWrite(gatt, descriptor, status);
             if(status == BluetoothGatt.GATT_SUCCESS){
                 notifyRegisterMap.remove(descriptor.getCharacteristic().getUuid().toString().trim());
+                if(notifyDataRegisterFlag){
+                    return;
+                }
+                if(notifyRegisterMap.size() == 1 || notifyRegisterMap.size() == 0){
+                    notifyDataRegisterFlag = true;
+                    mUpdatesDelegate.didUpdateBleConnectStatus(2);
+                }
                 for(Map.Entry<String,String> entry: notifyRegisterMap.entrySet()){
                      registerListener(true, entry.getValue(), entry.getKey());
                 }
@@ -256,13 +265,7 @@ public class BleEngine {
         workHandler = new Handler(handlerThread.getLooper());
         final BluetoothManager bluetoothManager = (BluetoothManager) mContext.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
-        notifyRegisterMap = new HashMap<>();
-        notifyRegisterMap.put(Constant.ScanCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
-        notifyRegisterMap.put(Constant.ConnectCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
-        notifyRegisterMap.put(Constant.SourceSwitchCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
-        notifyRegisterMap.put(Constant.SetNameCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
-        notifyRegisterMap.put(Constant.BatteryLevelCharacteristicUUID, Constant.BatteryInfoServiceUUID);
-        notifyRegisterMap.put(Constant.LedControlCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
+        initNotifyData();
         if(!mBluetoothAdapter.isEnabled()){
             mBluetoothAdapter.enable();
         }
@@ -306,13 +309,13 @@ public class BleEngine {
         if(device == null){
             return false;
         }
-
+        initNotifyData();
         workHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 mBluetoothGatt = device.connectGatt(mContext, false ,gattCallback);
             }
-        },2000L);
+        },1500L);
 
         return true;
     }
@@ -326,6 +329,7 @@ public class BleEngine {
             @Override
             public void run() {
                 mBluetoothGatt.disconnect();
+                notifyDataRegisterFlag = false;
             }
         });
 
@@ -340,6 +344,7 @@ public class BleEngine {
             public void run() {
                 mBluetoothGatt.close();
                 mBluetoothGatt = null;
+                notifyDataRegisterFlag = false;
             }
         });
     }
@@ -427,6 +432,17 @@ public class BleEngine {
               }
             }
         },500L);
+    }
+
+    public void initNotifyData(){
+        notifyRegisterMap = new HashMap<>();
+        notifyRegisterMap.put(Constant.ScanCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
+        notifyRegisterMap.put(Constant.ConnectCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
+        notifyRegisterMap.put(Constant.SourceSwitchCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
+        notifyRegisterMap.put(Constant.SetNameCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
+        notifyRegisterMap.put(Constant.BatteryLevelCharacteristicUUID, Constant.BatteryInfoServiceUUID);
+        notifyRegisterMap.put(Constant.LedControlCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
+        notifyRegisterMap.put(Constant.FactoryResetAndBTInfoUUID, Constant.CustomAudioControlServiceUUID);
     }
 
     public interface UpdatesDelegate{
