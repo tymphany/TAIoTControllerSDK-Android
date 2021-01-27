@@ -216,6 +216,26 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     }
 
     /**
+     * Use this method get BT info that current speaker BT connect status and BT mac address,
+     *
+     * both method didUpdateBTConnectStatus and method didUpdateBTMacAddress will call back.
+     *
+     * @see onBleListener
+     *
+     */
+     public void readBTInfo(){
+         byte[] data = new byte[1];
+         data[0] = 0x01;
+         mBleEngine.write(null,null,null, data, Constant.FactoryResetAndBTInfoUUID);
+         workHandler.postDelayed(new Runnable() {
+             @Override
+             public void run() {
+                 mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.FactoryResetAndBTInfoUUID);
+             }
+         },1000L);
+     }
+
+    /**
      * Add BleListener, if have some update the onBleListener interfaces will receive notify
      *
      * @param listener
@@ -340,6 +360,24 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         }
     }
 
+    @Override
+    public void didUpdateBTConnectStatus(int btConnectStatus) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateBTConnectStatus(btConnectStatus);
+            }
+        }
+    }
+
+    @Override
+    public void didUpdateBTMacAddress(String btMacAddress) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateBTMacAddress(btMacAddress);
+            }
+        }
+    }
+
     /**
      * <p>This listener gets events related to the BLE feature and data or Wifi connect status of a device. It informs when any of
      * its state change.</p>
@@ -425,5 +463,29 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          * @param ledPattern The led pattern value of current device
          */
         void didUpdateLedPattern(int ledPattern);
+
+        /**
+         *  This method will call back when use method readBTInfo to read current speaker information
+         *
+         * @param btConnectStatus
+         *        value 0 is the speaker no connected BT device
+         *        value 1 is the speaker connected one BT device
+         *        value 2 is the speaker connected two BT devices
+         */
+        void didUpdateBTConnectStatus(int btConnectStatus);
+
+        /**
+         *  This method will call back when use method readBTInfo to read current speaker information.
+         *
+         * @param btMacAddress  Current connected speaker's BT mac address.
+         *
+         *  Due to BLE mac address and BT mac address is different on same one speaker, with the BLE MAC address
+         *
+         *  can not judge whether the current speaker and mobile phone BT has been connected. Therefore, we can use the BT MAC address
+         *
+         *  of the currently connected speaker to judge whether the speaker connected by BT of the current mobile phone is the same one connected by BLE
+         *
+         */
+        void didUpdateBTMacAddress(String btMacAddress);
     }
 }

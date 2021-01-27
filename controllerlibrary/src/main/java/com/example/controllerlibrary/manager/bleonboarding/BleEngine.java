@@ -127,6 +127,25 @@ public class BleEngine {
                         mUpdatesDelegate.didUpdateLedPattern(ledPattern);
                         mUpdatesDelegate.didUpdateLedAnimation(ledAnimation);
                     }
+                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.FactoryResetAndBTInfoUUID))){
+                    byte[] data = characteristic.getValue();
+                    String macAddress =  null;
+                    int command = (int)data[0];
+                    int btStatus = (int)data[1];
+                    byte[] btMacAddress = new byte[17];
+                    if(data.length >= 20){
+                        for (int i=0; i<btMacAddress.length; i++){
+                            btMacAddress[i] = data[i+3];
+                        }
+                        macAddress = new String(btMacAddress);
+                    }
+
+                    if(command == 1){
+                        mUpdatesDelegate.didUpdateBTConnectStatus(btStatus);
+                        if (macAddress != null){
+                            mUpdatesDelegate.didUpdateBTMacAddress(macAddress);
+                        }
+                    }
                 }
         }
 
@@ -421,6 +440,8 @@ public class BleEngine {
         void didUpdateBatteryLevel(int batteryLevel);
         void didUpdateLedAnimation(int ledAnimation);
         void didUpdateLedPattern(int ledPattern);
+        void didUpdateBTConnectStatus(int btConnectStatus);
+        void didUpdateBTMacAddress(String btMacAddress);
     }
 
 
