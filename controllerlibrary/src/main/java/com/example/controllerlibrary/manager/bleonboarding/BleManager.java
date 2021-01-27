@@ -168,6 +168,16 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     }
 
     /**
+     *  Use this method will send command to speaker to set factory reset
+     *
+     */
+    public void factoryReset(){
+        byte[] data = new byte[1];
+        data[0] = 0x00;
+        mBleEngine.write(null,null,null, data, Constant.FactoryResetAndBTInfoUUID);
+    }
+
+    /**
      *  Using this method will get name of current device, and the method didUpdateDeviceName will call back
      *
      */
