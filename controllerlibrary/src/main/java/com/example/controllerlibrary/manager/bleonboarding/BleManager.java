@@ -226,9 +226,9 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     }
 
     /**
-     * Use this method get BT info that current speaker BT connect status and BT mac address,
+     * Use this method get BT info that is current speaker BT connect status and BT mac address. If the BT connect status value is 1 or 2
      *
-     * both method didUpdateBTConnectStatus and method didUpdateBTMacAddress will call back.
+     * both method didUpdateBTConnectStatus and method didUpdateBTMacAddress will call back. If BT connect status is 0 then only didUpdateBTConnectStatus method will call back.
      *
      * @see onBleListener
      *

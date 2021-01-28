@@ -143,7 +143,7 @@ public class BleEngine {
                     if(command == 1){
                         mUpdatesDelegate.didUpdateBTConnectStatus(btStatus);
                         if (macAddress != null){
-                            mUpdatesDelegate.didUpdateBTMacAddress(macAddress);
+                            mUpdatesDelegate.didUpdateBTMacAddress(macAddress.toUpperCase());
                         }
                     }
                 }
