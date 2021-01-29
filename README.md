@@ -317,7 +317,51 @@ You should connect device first before start the wifi ble onboard.
  public void setLedAnimation(int ledAnimation)
 
 ```
-
+##### Read device BT info 
+```java
+    /**
+     * Use this method get BT info that is current speaker BT connect status and BT mac address. If the BT connect status value is 1 or 2
+     *
+     * both method didUpdateBTConnectStatus and method didUpdateBTMacAddress will call back. If BT connect status is 0 then only didUpdateBTConnectStatus method will call back.
+     *
+     * @see onBleListener
+     *
+     */
+  public void readBTInfo()
+ 
+   /**
+     *  This method will call back when use method readBTInfo to read current speaker information
+     *
+     * @param btConnectStatus
+     *        value 0 is the speaker no connected BT device
+     *        value 1 is the speaker connected one BT device
+     *        value 2 is the speaker connected two BT devices
+     */
+  void didUpdateBTConnectStatus(int btConnectStatus)
+  
+   /**
+     *  This method will call back when use method readBTInfo to read current speaker information.
+     *
+     * @param btMacAddress  Current connected speaker's BT mac address.
+     *
+     *  Due to BLE mac address and BT mac address is different on same one speaker, with the BLE MAC address
+     *
+     *  can not judge whether the current speaker and mobile phone BT has been connected. Therefore, we can use the BT MAC address
+     *
+     *  of the currently connected speaker to judge whether the speaker connected by BT of the current mobile phone is the same one connected by BLE
+     *
+     */
+   void didUpdateBTMacAddress(String btMacAddress)
+ 
+```
+##### Factory reset
+```java
+    /**
+     *  Use this method will send command to speaker to set factory reset
+     *
+     */
+   public void factoryReset()
+```
 
 ### IoTSysManager
 
