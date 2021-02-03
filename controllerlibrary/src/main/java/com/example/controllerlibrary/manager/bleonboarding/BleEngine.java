@@ -131,7 +131,7 @@ public class BleEngine {
                     byte[] data = characteristic.getValue();
                     String macAddress =  null;
                     int command = (int)data[0];
-                    int btStatus = (int)data[2];
+                    int btStatus = (int)data[18];
                     byte[] btMacAddress = new byte[17];
                     if(data.length >= 19){
                         for (int i=0; i<btMacAddress.length; i++){
