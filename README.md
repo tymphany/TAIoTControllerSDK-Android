@@ -362,6 +362,14 @@ You should connect device first before start the wifi ble onboard.
      */
    public void factoryReset()
 ```
+##### Trigger speaker sound and led effect
+```java
+   /**
+     *  Use this method will send command to speaker trigger sound and led effect
+     *
+     */
+   public void triggerSoundAndLedEffect()
+```
 
 ### IoTSysManager
 

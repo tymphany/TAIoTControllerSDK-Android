@@ -127,7 +127,7 @@ public class BleEngine {
                         mUpdatesDelegate.didUpdateLedPattern(ledPattern);
                         mUpdatesDelegate.didUpdateLedAnimation(ledAnimation);
                     }
-                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.FactoryResetAndBTInfoUUID))){
+                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.ActionCharacteristicUUID))){
                     byte[] data = characteristic.getValue();
                     String macAddress =  null;
                     int command = (int)data[0];
@@ -442,7 +442,7 @@ public class BleEngine {
         notifyRegisterMap.put(Constant.SetNameCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
         notifyRegisterMap.put(Constant.BatteryLevelCharacteristicUUID, Constant.BatteryInfoServiceUUID);
         notifyRegisterMap.put(Constant.LedControlCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
-        notifyRegisterMap.put(Constant.FactoryResetAndBTInfoUUID, Constant.CustomAudioControlServiceUUID);
+        notifyRegisterMap.put(Constant.ActionCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
     }
 
     public interface UpdatesDelegate{

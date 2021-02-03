@@ -174,7 +174,17 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     public void factoryReset(){
         byte[] data = new byte[1];
         data[0] = 0x00;
-        mBleEngine.write(null,null,null, data, Constant.FactoryResetAndBTInfoUUID);
+        mBleEngine.write(null,null,null, data, Constant.ActionCharacteristicUUID);
+    }
+
+    /**
+     *   Use this method will send command to speaker trigger sound and led effect
+     *
+     */
+    public void triggerSoundAndLedEffect(){
+        byte[] data = new byte[1];
+        data[0] = 0x02;
+        mBleEngine.write(null,null,null, data, Constant.ActionCharacteristicUUID);
     }
 
     /**
@@ -236,11 +246,11 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      public void readBTInfo(){
          byte[] data = new byte[1];
          data[0] = 0x01;
-         mBleEngine.write(null,null,null, data, Constant.FactoryResetAndBTInfoUUID);
+         mBleEngine.write(null,null,null, data, Constant.ActionCharacteristicUUID);
          workHandler.postDelayed(new Runnable() {
              @Override
              public void run() {
-                 mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.FactoryResetAndBTInfoUUID);
+                 mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.ActionCharacteristicUUID);
              }
          },1000L);
      }

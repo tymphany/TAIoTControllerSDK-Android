@@ -16,7 +16,7 @@ public class Constant {
     public static final String SourceSwitchCharacteristicUUID = "0000aa01-0000-1000-8000-008012340002";
     public static final String SetNameCharacteristicUUID = "0000aa01-0000-1000-8000-008012340003";
     public static final String LedControlCharacteristicUUID = "0000aa01-0000-1000-8000-008012340004";
-    public static final String FactoryResetAndBTInfoUUID = "0000aa01-0000-1000-8000-008012340005";
+    public static final String ActionCharacteristicUUID = "0000aa01-0000-1000-8000-008012340005";
     public static final String DescriptorUUID = "00002902-0000-1000-8000-00805f9b34fb";
 
     public static final String DeviceInfoServiceUUID = "0000180a-0000-1000-8000-00805f9b34fb";
