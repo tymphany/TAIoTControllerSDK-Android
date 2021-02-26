@@ -113,6 +113,11 @@ public class BleEngine {
                     if(firmwareVersion != null){
                         mUpdatesDelegate.didUpdateFirmwareVersion(firmwareVersion);
                     }
+                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.DeviceInfoSerialNumberCharacteristicUUID))){
+                    String serialNumber = new String(characteristic.getValue());
+                    if(serialNumber != null){
+                        mUpdatesDelegate.didUpdateSerialNumber(serialNumber);
+                    }
                 }else if(characteristic.getUuid().equals(UUID.fromString(Constant.BatteryLevelCharacteristicUUID))){
                     byte[] data = characteristic.getValue();
                     int batteryLevel = (int)data[0];
@@ -458,6 +463,7 @@ public class BleEngine {
         void didUpdateLedPattern(int ledPattern);
         void didUpdateBTConnectStatus(int btConnectStatus);
         void didUpdateBTMacAddress(String btMacAddress);
+        void didUpdateSerialNumber(String serialNumber);
     }
 
 
