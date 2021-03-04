@@ -226,6 +226,16 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     }
 
     /**
+     *  Using this method to get serial number , and the method didUpdateSerialNumber will call back
+     *
+     * @see onBleListener
+     *
+     */
+    public void readSerialNumber(){
+        mBleEngine.read(Constant.DeviceInfoServiceUUID, Constant.DeviceInfoSerialNumberCharacteristicUUID);
+    }
+
+    /**
      *  Using this method to get led pattern and animation, both method didUpdateLedAnimation and method didUpdateLedPattern will call back
      *
      * @see onBleListener
@@ -398,6 +408,15 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         }
     }
 
+    @Override
+    public void didUpdateSerialNumber(String serialNumber) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateSerialNumber(serialNumber);
+            }
+        }
+    }
+
     /**
      * <p>This listener gets events related to the BLE feature and data or Wifi connect status of a device. It informs when any of
      * its state change.</p>
@@ -507,5 +526,13 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          *
          */
         void didUpdateBTMacAddress(String btMacAddress);
+
+        /**
+         *  This method will call back when use readSerialNumber method to get serial number
+         *
+         *
+         * @param serialNumber  The serial number of current device
+         */
+        void didUpdateSerialNumber(String serialNumber);
     }
 }
