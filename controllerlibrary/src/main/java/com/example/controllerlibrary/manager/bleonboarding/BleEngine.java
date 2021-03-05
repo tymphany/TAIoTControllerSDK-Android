@@ -63,15 +63,14 @@ public class BleEngine {
             super.onConnectionStateChange(gatt, status, newState);
 
             if(newState == BluetoothProfile.STATE_CONNECTED){
-                mBluetoothGatt.requestMtu(517);
+                mBluetoothGatt.requestMtu(200);
                 stopLeScan();
                 workHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         mBluetoothGatt.discoverServices();
-                        registerListener(true, Constant.CustomAudioControlServiceUUID, Constant.ScanCharacteristicUUID);
                     }
-                },1000L);
+                },2000L);
             }else if(newState == BluetoothProfile.STATE_DISCONNECTING){
                 mUpdatesDelegate.didUpdateBleConnectStatus(newState);
             }else if(newState == BluetoothProfile.STATE_DISCONNECTED){
@@ -82,6 +81,7 @@ public class BleEngine {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
+            registerListener(true, Constant.CustomAudioControlServiceUUID, Constant.ScanCharacteristicUUID);
         }
 
         @Override
@@ -236,7 +236,7 @@ public class BleEngine {
                 if(notifyDataRegisterFlag){
                     return;
                 }
-                if(notifyRegisterMap.size() == 1 || notifyRegisterMap.size() == 0){
+                if( notifyRegisterMap.size() == 0){
                     notifyDataRegisterFlag = true;
                     mUpdatesDelegate.didUpdateBleConnectStatus(2);
                 }
@@ -429,10 +429,7 @@ public class BleEngine {
                 BluetoothGattDescriptor descriptor = gattCharacteristic.getDescriptor(descriptorUUID);
                 if(descriptor != null){
                     descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                    boolean flag = mBluetoothGatt.writeDescriptor(descriptor);
-                    if(!flag){
-                        registerListener(true, serviceUUID, characteristicUUID);
-                    }
+                    mBluetoothGatt.writeDescriptor(descriptor);
                 }
               }
             }

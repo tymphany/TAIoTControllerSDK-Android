@@ -306,16 +306,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     public void didUpdateBleConnectStatus(int status) {
         synchronized (mOnBleListeners){
             for(onBleListener listener : mOnBleListeners){
-                if(status == 2){
-                    workHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            listener.didUpdateBleConnectStatus(status);
-                        }
-                    },3000L);
-                }else{
-                    listener.didUpdateBleConnectStatus(status);
-                }
+              listener.didUpdateBleConnectStatus(status);
             }
         }
     }
