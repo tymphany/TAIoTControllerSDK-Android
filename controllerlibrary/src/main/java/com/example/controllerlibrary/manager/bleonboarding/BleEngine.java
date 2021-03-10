@@ -9,9 +9,15 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.ParcelUuid;
 import android.text.TextUtils;
 
 
@@ -20,7 +26,10 @@ import com.example.controllerlibrary.manager.bleonboarding.bean.WifiBean;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,16 +43,42 @@ public class BleEngine {
     private Handler workHandler = null;
     private Map<String, String> notifyRegisterMap = null;
     private boolean notifyDataRegisterFlag = false;
+    private BluetoothLeScanner bluetoothLeScanner = null;
+    private ScanSettings mScanSettings = null;
+    private ScanFilter mScanFilter = null;
+    private List<ScanFilter> scanFilterList = new ArrayList<>();
+    private byte[] manufacturerData = null;
+    private TASystem taSystem = null;
 
-    private final BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
+
+    private final ScanCallback leCallback = new ScanCallback() {
         @Override
-        public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-            if(device.getName() != null){
-                TASystem taSystem =  new TASystem();
-                taSystem.setDeviceName(device.getName());
-                taSystem.setDeviceAddress(device.getAddress());
-                mUpdatesDelegate.didUpdateLeDevices(taSystem, rssi);
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            if(result.getScanRecord().getDeviceName() != null){
+                taSystem = new TASystem();
+                manufacturerData = result.getScanRecord().getManufacturerSpecificData().valueAt(0);
+                if(manufacturerData.length != 0 && manufacturerData.length > 2){
+                    taSystem.setSourceType((int)manufacturerData[0]);
+                    taSystem.setSerialNumber(new String(extractBytes(manufacturerData,1,manufacturerData.length-1)));
+                    taSystem.setDeviceName(result.getDevice().getName());
+                    taSystem.setDeviceAddress(result.getDevice().getAddress());
+                }else{
+                    taSystem.setDeviceName(result.getDevice().getName());
+                    taSystem.setDeviceAddress(result.getDevice().getAddress());
+                }
+                mUpdatesDelegate.didUpdateLeDevices(taSystem, result.getRssi());
             }
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            super.onBatchScanResults(results);
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
         }
     };
 
@@ -270,6 +305,7 @@ public class BleEngine {
         workHandler = new Handler(handlerThread.getLooper());
         final BluetoothManager bluetoothManager = (BluetoothManager) mContext.getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
+        bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
         initNotifyData();
         if(!mBluetoothAdapter.isEnabled()){
             mBluetoothAdapter.enable();
@@ -280,17 +316,18 @@ public class BleEngine {
         mUpdatesDelegate = delegate;
     }
 
-    public void startLeScan(UUID[] UUID){
+    public void startLeScan(String uuid){
        workHandler.postDelayed(new Runnable() {
            @Override
            public void run() {
-               if(UUID == null){
-                   boolean isSuccess = mBluetoothAdapter.startLeScan(callback);
-               }else{
-                   boolean isSuccess = mBluetoothAdapter.startLeScan(UUID,callback);
-               }
+               ScanFilter.Builder filterBuilder = new ScanFilter.Builder();
+               mScanFilter = filterBuilder.setServiceUuid(ParcelUuid.fromString(uuid)).build();
+               scanFilterList.add(mScanFilter);
+               ScanSettings.Builder settingBuilder = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED);
+               mScanSettings = settingBuilder.build();
+               bluetoothLeScanner.startScan(scanFilterList, mScanSettings, leCallback);
            }
-       },2000L);
+       },1000L);
     }
 
 
@@ -298,7 +335,7 @@ public class BleEngine {
         workHandler.post(new Runnable() {
             @Override
             public void run() {
-                mBluetoothAdapter.stopLeScan(callback);
+                bluetoothLeScanner.stopScan(leCallback);
             }
         });
     }
@@ -350,6 +387,8 @@ public class BleEngine {
                 mBluetoothGatt.close();
                 mBluetoothGatt = null;
                 notifyDataRegisterFlag = false;
+                mScanFilter = null;
+                mScanSettings = null;
             }
         });
     }
@@ -447,6 +486,12 @@ public class BleEngine {
         notifyRegisterMap.put(Constant.ActionCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
     }
 
+    private static byte[] extractBytes(byte[] scanRecord, int start, int length) {
+        byte[] bytes = new byte[length];
+        System.arraycopy(scanRecord, start, bytes, 0, length);
+        return bytes;
+    }
+
     public interface UpdatesDelegate{
         void didUpdateWifi(WifiBean wifiBean);
         void didUpdateBleConnectStatus(int status);
@@ -462,7 +507,5 @@ public class BleEngine {
         void didUpdateBTMacAddress(String btMacAddress);
         void didUpdateSerialNumber(String serialNumber);
     }
-
-
 }
 

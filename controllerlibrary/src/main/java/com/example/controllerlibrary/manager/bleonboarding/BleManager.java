@@ -9,7 +9,6 @@ import com.example.controllerlibrary.manager.bleonboarding.bean.WifiBean;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 
 public class BleManager implements BleEngine.UpdatesDelegate{
@@ -18,8 +17,6 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     private BleEngine mBleEngine;
     private final List<onBleListener> mOnBleListeners = new ArrayList<>();
     private Handler workHandler = null;
-    private UUID[] uuid = new UUID[1];
-
     private BleManager (){}
 
     public static BleManager getInstance(){
@@ -52,8 +49,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      *  This method to start scan around BLE devices, and the method didUpdateLeDevices will call back
      */
     public void startScan(){
-        uuid[0] = UUID.fromString(Constant.CustomAudioControlServiceUUID);
-        mBleEngine.startLeScan(uuid);
+        mBleEngine.startLeScan(Constant.CustomAudioControlServiceUUID);
     }
 
     /**
