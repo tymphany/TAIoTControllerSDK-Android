@@ -370,6 +370,24 @@ You should connect device first before start the wifi ble onboard.
      */
    public void triggerSoundAndLedEffect()
 ```
+##### Read serial number
+```java
+  /**
+    *  Using this method to get serial number , and the method didUpdateSerialNumber will call back
+    *
+    * @see onBleListener
+    *
+    */
+  public void readSerialNumber()
+  
+  /**
+   *  This method will call back when use readSerialNumber method to get serial number
+   *
+   *
+   * @param serialNumber  The serial number of current device
+   */
+  void didUpdateSerialNumber(String serialNumber);
+```
 
 ### IoTSysManager
 
@@ -666,6 +684,8 @@ void deviceDidChangeOtaStatus(IoTDevice ioTDevice, IoTDevice.IoTOtaStatus ioTOta
  getWifiMacAddress(IoTDevice ioTDevice)
  
  getSourceType(IoTDevice ioTDevice)
+ 
+ getSerialNumber(IoTDevice ioTDevice)
  
 ```
 ##### and so on
