@@ -593,6 +593,22 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
       return  ioTDevice.getFirmwareVersion();
     }
 
+    /**
+     *
+     * @param ioTDevice
+     *
+     * @return
+     *
+     *     There are three status only occur in auto-ota, they not have notify , only through this method read.
+     *
+     *     IoTOtaStatusParseXmlFailed, // Speaker fail to parse xml, only occur in auto-ota
+     *
+     *     IoTOtaStatusForceUpgradeFalse,  // Speaker fail to force ota, only occur in auto-ota
+     *
+     *     IoTOtaStatusSmallerVersion  // Speaker detect server exist smaller version, only occur in auto-ota
+     *
+     */
+
     public IoTDevice.IoTOtaStatus getIoTOtaStatus(IoTDevice ioTDevice){
       return ioTDevice.getIoTOtaStatus();
     }
