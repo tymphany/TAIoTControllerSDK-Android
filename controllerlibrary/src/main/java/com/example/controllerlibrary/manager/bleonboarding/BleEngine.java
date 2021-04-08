@@ -173,6 +173,9 @@ public class BleEngine {
                     int command = (int)data[0];
                     int btStatus = (int)data[18];
                     byte[] btMacAddress = new byte[17];
+                    ArrayList<String> listName = new ArrayList<>();
+                    String name1 = null;
+                    String name2 = null;
                     if(data.length >= 19){
                         for (int i=0; i<btMacAddress.length; i++){
                             btMacAddress[i] = data[i+1];
@@ -180,11 +183,24 @@ public class BleEngine {
                         macAddress = new String(btMacAddress);
                     }
 
-                    if(command == 1){
+                    if(btStatus == 0){
                         mUpdatesDelegate.didUpdateBTConnectStatus(btStatus);
                         if (macAddress != null){
-                            mUpdatesDelegate.didUpdateBTMacAddress(macAddress.toUpperCase());
+                            mUpdatesDelegate.didUpdateBTMacAddressAndDeviceName(macAddress.toUpperCase(), listName);
                         }
+                    }else if(btStatus == 1){
+                        mUpdatesDelegate.didUpdateBTConnectStatus(btStatus);
+                        name1 = new String(extractBytes(data, 20, data[19]));
+                        listName.add(name1);
+                        mUpdatesDelegate.didUpdateBTMacAddressAndDeviceName(macAddress.toUpperCase(), listName);
+
+                    }else if(btStatus == 2){
+                        mUpdatesDelegate.didUpdateBTConnectStatus(btStatus);
+                        name1 = new String(extractBytes(data, 20, data[19]));
+                        name2 = new String(extractBytes(data, 19 + data[19] + 2, data[19 + data[19] + 1]));
+                        listName.add(name1);
+                        listName.add(name2);
+                        mUpdatesDelegate.didUpdateBTMacAddressAndDeviceName(macAddress.toUpperCase(), listName);
                     }
                 }
         }
@@ -504,7 +520,7 @@ public class BleEngine {
         void didUpdateLedAnimation(int ledAnimation);
         void didUpdateLedPattern(int ledPattern);
         void didUpdateBTConnectStatus(int btConnectStatus);
-        void didUpdateBTMacAddress(String btMacAddress);
+        void didUpdateBTMacAddressAndDeviceName(String btMacAddress, ArrayList<String> listName);
         void didUpdateSerialNumber(String serialNumber);
     }
 }
