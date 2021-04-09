@@ -247,7 +247,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     /**
      * Use this method get BT info that is current speaker BT connect status and BT mac address,
      *
-     * both method didUpdateBTConnectStatus and method didUpdateBTMacAddress will call back.
+     * both method didUpdateBTConnectStatus and method didUpdateBTMacAddressAndDeviceName will call back.
      *
      * @see onBleListener
      *
@@ -390,10 +390,10 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     }
 
     @Override
-    public void didUpdateBTMacAddress(String btMacAddress) {
+    public void didUpdateBTMacAddressAndDeviceName(String btMacAddress, ArrayList<String> listName) {
         synchronized (mOnBleListeners){
             for (onBleListener listener : mOnBleListeners){
-                listener.didUpdateBTMacAddress(btMacAddress);
+                listener.didUpdateBTMacAddressAndDeviceName(btMacAddress, listName);
             }
         }
     }
@@ -508,6 +508,13 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          *
          * @param btMacAddress  Current connected speaker's BT mac address.
          *
+         * @param listName A list of device names to which the speaker is connected, such as phone name. if
+         *                 didUpdateBTConnectStatus method callback return 0 , it means no device connected speaker, so
+         *                 the listName size is 0. If callback return 1, it means one device connected speaker via BT, so
+         *                 the listName size is 1. If callback return 2, it means two devices connected speaker via BT, so
+         *                 the listName size is 2.
+         *
+         *
          *  Due to BLE mac address and BT mac address is different on same one speaker, with the BLE MAC address
          *
          *  can not judge whether the current speaker and mobile phone BT has been connected. Therefore, we can use the BT MAC address
@@ -515,7 +522,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          *  of the currently connected speaker to judge whether the speaker connected by BT of the current mobile phone is the same one connected by BLE
          *
          */
-        void didUpdateBTMacAddress(String btMacAddress);
+        void didUpdateBTMacAddressAndDeviceName(String btMacAddress, ArrayList<String> listName);
 
         /**
          *  This method will call back when use readSerialNumber method to get serial number
