@@ -38,7 +38,7 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
   private final List<onStereoListener> mStereoListeners = new ArrayList<>();
   private final List<onOtaListener> mOtaListeners = new ArrayList<>();
   private final List<onSourceSwitchListener> mSourceSwitchListeners = new ArrayList<>();
-
+  private final List<onAirplayListener> mAirplayListeners = new ArrayList<>();
 
   public interface onIoTDeviceListener {
         /**
@@ -130,6 +130,22 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         synchronized (mSourceSwitchListeners) {
             if (listener != null) {
                 mSourceSwitchListeners.remove(listener);
+            }
+        }
+    }
+
+    public void addAirplayListener(onAirplayListener listener){
+       synchronized (mAirplayListeners) {
+           if(listener != null && !mAirplayListeners.contains(listener)){
+               mAirplayListeners.add(listener);
+           }
+       }
+    }
+
+    public void removeAirPlayListener(onAirplayListener listener){
+        synchronized (mAirplayListeners) {
+            if(listener != null){
+                mAirplayListeners.remove(listener);
             }
         }
     }
@@ -278,6 +294,19 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
          * @param sourceType the current source type that has changed
          */
         void deviceDidChangeSourceType(IoTDevice ioTDevice, IoTDevice.SourceType sourceType);
+    }
+
+    public interface onAirplayListener{
+        /**
+         *
+         *  Notification that the AirPlay home status for a device has changed.
+         *  @param ioTDevice the device that has been affected.
+         *  @param airplayHomeStatus the new home status for the speaker. the value 0 is joined, the value 1 is not joined
+         *
+         *  @warning According to Apple's requirement, device name should not be change whenever device join to Apple Home. The App should disable rename feature when home status is join.
+         *
+         */
+        void deviceDidChangeAirplayHomeStatus(IoTDevice ioTDevice, int airplayHomeStatus);
     }
 
 	public interface onZigbeeListener {
@@ -625,6 +654,19 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
       return ioTDevice.getSerialNumber();
     }
 
+    /**
+     * @param ioTDevice
+     *
+     * Use this method get home status of current speaker, the value 0 is joined, the value 1 is not joined.
+     *
+     * The method didUpdateAirplayHomeStatus will call back.
+     *
+     * According to Apple's requirement, device name should not be change whenever device join to Apple Home.
+     */
+    public int getAirplayHomeStatus(IoTDevice ioTDevice){
+      return ioTDevice.getAirplayHomeStatus();
+    }
+
   @Override
   public void didChangeName(IoTDevice device, String name) {
     synchronized (mSystemListeners) {
@@ -685,6 +727,15 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         synchronized (mSourceSwitchListeners){
             for (onSourceSwitchListener listener : mSourceSwitchListeners){
                 listener.deviceDidChangeSourceType(ioTDevice, sourceType);
+            }
+        }
+    }
+
+    @Override
+    public void deviceDidChangAirplayHomeStatus(IoTDevice ioTDevice, int airplayHomeStatus) {
+        synchronized (mAirplayListeners){
+            for (onAirplayListener listener : mAirplayListeners){
+                listener.deviceDidChangeAirplayHomeStatus(ioTDevice, airplayHomeStatus);
             }
         }
     }

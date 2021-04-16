@@ -265,6 +265,28 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      }
 
     /**
+     * Use this method get home status of current speaker, the value 0 is joined, the value 1 is not joined.
+     *
+     * The method didUpdateAirplayHomeStatus will call back.
+     *
+     * According to Apple's requirement, device name should not be change whenever device join to Apple Home.
+     *
+     * @see onBleListener
+     *
+     */
+    public void readAirplayHomeStatus(){
+        byte[] data = new byte[1];
+        data[0] = 0x03;
+        mBleEngine.write(null,null,null, data, Constant.ActionCharacteristicUUID);
+        workHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.ActionCharacteristicUUID);
+            }
+        },1000L);
+    }
+
+    /**
      * Add BleListener, if have some update the onBleListener interfaces will receive notify
      *
      * @param listener
@@ -407,6 +429,15 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         }
     }
 
+    @Override
+    public void didUpdateAirplayHomeStatus(int airplayHomeStatus) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateAirplayHomeStatus(airplayHomeStatus);
+            }
+        }
+    }
+
     /**
      * <p>This listener gets events related to the BLE feature and data or Wifi connect status of a device. It informs when any of
      * its state change.</p>
@@ -531,5 +562,16 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          * @param serialNumber  The serial number of current device
          */
         void didUpdateSerialNumber(String serialNumber);
+
+        /**
+         *
+         *  Notification that the AirPlay home status for a device has changed.
+         *
+         *  @param airplayHomeStatus the new home status for the speaker. the value 0 is joined, the value 1 is not joined
+         *
+         *  @warning According to Apple's requirement, device name should not be change whenever device join to Apple Home. The App should disable rename feature when home status is join.
+         *
+         */
+        void didUpdateAirplayHomeStatus(int airplayHomeStatus);
     }
 }
