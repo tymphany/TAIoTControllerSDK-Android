@@ -265,7 +265,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
      }
 
     /**
-     * Use this method get home status of current speaker, the value 0 is joined, the value 1 is not joined.
+     * Use this method get home status of current speaker, the value 0 is not joined, the value 1 is joined.
      *
      * The method didUpdateAirplayHomeStatus will call back.
      *
@@ -567,7 +567,7 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          *
          *  Notification that the AirPlay home status for a device has changed.
          *
-         *  @param airplayHomeStatus the new home status for the speaker. the value 0 is joined, the value 1 is not joined
+         *  @param airplayHomeStatus the new home status for the speaker. the value 0 is not joined, the value 1 is joined
          *
          *  @warning According to Apple's requirement, device name should not be change whenever device join to Apple Home. The App should disable rename feature when home status is join.
          *
