@@ -58,10 +58,10 @@ public class BleEngine {
             if(result.getScanRecord().getDeviceName() != null){
                 taSystem = new TASystem();
                 manufacturerData = result.getScanRecord().getManufacturerSpecificData().valueAt(0);
-                if(manufacturerData.length != 0 && manufacturerData.length > 2){
+                if(manufacturerData.length != 0 && manufacturerData.length > 12){
                     taSystem.setSourceType((int)manufacturerData[0]);
-                    taSystem.setSerialNumber(new String(extractBytes(manufacturerData,1,manufacturerData.length-1)));
-                    taSystem.setDeviceName(result.getDevice().getName());
+                    taSystem.setSerialNumber(new String(extractBytes(manufacturerData, 0, 12)));
+                    taSystem.setDeviceName(new String(extractBytes(manufacturerData, 12, manufacturerData.length - 12)));
                     taSystem.setDeviceAddress(result.getDevice().getAddress());
                 }else{
                     taSystem.setDeviceName(result.getDevice().getName());
