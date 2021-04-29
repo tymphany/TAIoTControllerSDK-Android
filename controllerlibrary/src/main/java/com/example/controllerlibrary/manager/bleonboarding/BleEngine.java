@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.ParcelUuid;
 import android.text.TextUtils;
+import android.util.SparseArray;
 
 
 import com.example.controllerlibrary.manager.bleonboarding.bean.TASystem;
@@ -48,8 +49,30 @@ public class BleEngine {
     private ScanFilter mScanFilter = null;
     private List<ScanFilter> scanFilterList = new ArrayList<>();
     private byte[] manufacturerData = null;
+
     private TASystem taSystem = null;
 
+    private static final int DATA_TYPE_FLAGS = 0x01;
+    private static final int DATA_TYPE_SERVICE_UUIDS_16_BIT_PARTIAL = 0x02;
+    private static final int DATA_TYPE_SERVICE_UUIDS_16_BIT_COMPLETE = 0x03;
+    private static final int DATA_TYPE_SERVICE_UUIDS_32_BIT_PARTIAL = 0x04;
+    private static final int DATA_TYPE_SERVICE_UUIDS_32_BIT_COMPLETE = 0x05;
+    private static final int DATA_TYPE_SERVICE_UUIDS_128_BIT_PARTIAL = 0x06;
+    private static final int DATA_TYPE_SERVICE_UUIDS_128_BIT_COMPLETE = 0x07;
+    private static final int DATA_TYPE_LOCAL_NAME_SHORT = 0x08;
+    private static final int DATA_TYPE_LOCAL_NAME_COMPLETE = 0x09;
+    private static final int DATA_TYPE_TX_POWER_LEVEL = 0x0A;
+    private static final int DATA_TYPE_SERVICE_DATA_16_BIT = 0x16;
+    private static final int DATA_TYPE_SERVICE_DATA_32_BIT = 0x20;
+    private static final int DATA_TYPE_SERVICE_DATA_128_BIT = 0x21;
+    private static final int DATA_TYPE_SERVICE_SOLICITATION_UUIDS_16_BIT = 0x14;
+    private static final int DATA_TYPE_SERVICE_SOLICITATION_UUIDS_32_BIT = 0x1F;
+    private static final int DATA_TYPE_SERVICE_SOLICITATION_UUIDS_128_BIT = 0x15;
+    private static final int DATA_TYPE_MANUFACTURER_SPECIFIC_DATA = 0xFF;
+
+    private List<byte[]> manufacturerDataList = null;
+    private byte[] manufacturerData1 = null;
+    private byte[] manufacturerData2 = null;
 
     private final ScanCallback leCallback = new ScanCallback() {
         @Override
@@ -57,12 +80,23 @@ public class BleEngine {
             super.onScanResult(callbackType, result);
             if(result.getScanRecord().getDeviceName() != null){
                 taSystem = new TASystem();
+                manufacturerDataList = parseFromBytes(result.getScanRecord().getBytes());
                 manufacturerData = result.getScanRecord().getManufacturerSpecificData().valueAt(0);
                 if(manufacturerData.length != 0 && manufacturerData.length > 12){
-                    taSystem.setSourceType((int)manufacturerData[0]);
-                    taSystem.setSerialNumber(new String(extractBytes(manufacturerData, 0, 12)));
-                    taSystem.setDeviceName(new String(extractBytes(manufacturerData, 12, manufacturerData.length - 12)));
-                    taSystem.setDeviceAddress(result.getDevice().getAddress());
+                    if( manufacturerDataList.size() == 1){
+                        manufacturerData1 = manufacturerDataList.get(0);
+                        taSystem.setSourceType((int)manufacturerData1[0]);
+                        taSystem.setSerialNumber(new String((extractBytes(manufacturerData1, 1, manufacturerData1.length - 1))));
+                        taSystem.setDeviceName(result.getDevice().getName());
+                        taSystem.setDeviceAddress(result.getDevice().getAddress());
+                    }else if(manufacturerDataList.size() == 2){
+                        manufacturerData1 = manufacturerDataList.get(0);
+                        manufacturerData2 = manufacturerDataList.get(1);
+                        taSystem.setSourceType((int)manufacturerData1[0]);
+                        taSystem.setSerialNumber(new String(extractBytes(manufacturerData2, 0, 12)));
+                        taSystem.setDeviceName(new String((extractBytes(manufacturerData2,12, manufacturerData2.length - 12))));
+                        taSystem.setDeviceAddress(result.getDevice().getAddress());
+                    }
                 }else{
                     taSystem.setDeviceName(result.getDevice().getName());
                     taSystem.setDeviceAddress(result.getDevice().getAddress());
@@ -534,6 +568,108 @@ public class BleEngine {
         void didUpdateBTMacAddressAndDeviceName(String btMacAddress, ArrayList<String> listName);
         void didUpdateSerialNumber(String serialNumber);
         void didUpdateAirplayHomeStatus(int airplayHomeStatus);
+    }
+
+
+    public static List<byte[]> parseFromBytes(byte[] scanRecord) {
+        if (scanRecord == null) {
+            return null;
+        }
+
+        int currentPos = 0;
+        int advertiseFlag = -1;
+        List<ParcelUuid> serviceUuids = new ArrayList<ParcelUuid>();
+
+        String localName = null;
+        int txPowerLevel = Integer.MIN_VALUE;
+         List<byte[]> manufactureDataList = new ArrayList<>();
+         byte[] manufacturerData1 = null;
+         byte[] manufacturerData2 = null;
+
+        SparseArray<byte[]> manufacturerData = new SparseArray<byte[]>();
+        int parseManufacturerDataTimes = 0;
+
+        try {
+            while (currentPos < scanRecord.length) {
+                // length is unsigned int.
+                int length = scanRecord[currentPos++] & 0xFF;
+
+                if (length == 0) {
+                    break;
+                }
+                // Note the length includes the length of the field type itself.
+                int dataLength = length - 1;
+                // fieldType is unsigned int.
+                int fieldType = scanRecord[currentPos++] & 0xFF;
+                switch (fieldType) {
+                    case DATA_TYPE_FLAGS:
+                        advertiseFlag = scanRecord[currentPos] & 0xFF;
+                        break;
+                    case DATA_TYPE_SERVICE_UUIDS_16_BIT_PARTIAL:
+                    case DATA_TYPE_SERVICE_UUIDS_16_BIT_COMPLETE:
+
+                        break;
+                    case DATA_TYPE_SERVICE_UUIDS_32_BIT_PARTIAL:
+                    case DATA_TYPE_SERVICE_UUIDS_32_BIT_COMPLETE:
+
+                        break;
+                    case DATA_TYPE_SERVICE_UUIDS_128_BIT_PARTIAL:
+                    case DATA_TYPE_SERVICE_UUIDS_128_BIT_COMPLETE:
+
+                        break;
+                    case DATA_TYPE_SERVICE_SOLICITATION_UUIDS_16_BIT:
+
+                        break;
+                    case DATA_TYPE_SERVICE_SOLICITATION_UUIDS_32_BIT:
+
+                        break;
+                    case DATA_TYPE_SERVICE_SOLICITATION_UUIDS_128_BIT:
+
+                        break;
+                    case DATA_TYPE_LOCAL_NAME_SHORT:
+                    case DATA_TYPE_LOCAL_NAME_COMPLETE:
+                        localName = new String(
+                                extractBytes(scanRecord, currentPos, dataLength));
+                        break;
+                    case DATA_TYPE_TX_POWER_LEVEL:
+                        txPowerLevel = scanRecord[currentPos];
+                        break;
+                    case DATA_TYPE_SERVICE_DATA_16_BIT:
+                    case DATA_TYPE_SERVICE_DATA_32_BIT:
+                    case DATA_TYPE_SERVICE_DATA_128_BIT:
+                        break;
+                    case DATA_TYPE_MANUFACTURER_SPECIFIC_DATA:
+                        // The first two bytes of the manufacturer specific data are
+                        // manufacturer ids in little endian.
+                        int manufacturerId = ((scanRecord[currentPos + 1] & 0xFF) << 8)
+                                + (scanRecord[currentPos] & 0xFF);
+                        byte[] manufacturerDataBytes = extractBytes(scanRecord, currentPos + 2,
+                                dataLength - 2);
+                        if(parseManufacturerDataTimes == 0){
+                            manufacturerData1 =  manufacturerDataBytes;
+                            manufactureDataList.add(manufacturerData1);
+                        }else if(parseManufacturerDataTimes == 1){
+                            manufacturerData2 = manufacturerDataBytes;
+                            manufactureDataList.add(manufacturerData2);
+                        }
+                        manufacturerData.put(manufacturerId, manufacturerDataBytes);
+                        parseManufacturerDataTimes++;
+                        break;
+                    default:
+                        // Just ignore, we don't handle such data type.
+                        break;
+                }
+                currentPos += dataLength;
+            }
+
+            if (serviceUuids.isEmpty()) {
+                serviceUuids = null;
+            }
+        } catch (Exception e){
+            // As the record is invalid, ignore all the parsed results for this packet
+            // and return an empty record with raw scanRecord bytes in results
+        }
+        return  manufactureDataList;
     }
 }
 
