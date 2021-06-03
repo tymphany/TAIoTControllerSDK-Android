@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.ParcelUuid;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.SparseArray;
 
 
@@ -204,6 +205,7 @@ public class BleEngine {
                 }else if(characteristic.getUuid().equals(UUID.fromString(Constant.ActionCharacteristicUUID))){
                     byte[] data = characteristic.getValue();
                     int command = (int)data[0];
+                    Log.e("Jasper","command="+command);
                  if(command == 1) {
                      String macAddress = null;
 
@@ -240,7 +242,10 @@ public class BleEngine {
                      }
                   }else if(command == 3){
                          mUpdatesDelegate.didUpdateAirplayHomeStatus((int) data[1]);
-                  }
+                  }else if (command == 4){
+                     Log.e("Jasper","ChargeStatus="+(int)data[1]);
+                     mUpdatesDelegate.didUpdateChargeStatus((int)data[1]);
+                 }
                 }
         }
 
@@ -568,6 +573,7 @@ public class BleEngine {
         void didUpdateBTMacAddressAndDeviceName(String btMacAddress, ArrayList<String> listName);
         void didUpdateSerialNumber(String serialNumber);
         void didUpdateAirplayHomeStatus(int airplayHomeStatus);
+        void didUpdateChargeStatus(int chargeStatus);
     }
 
 

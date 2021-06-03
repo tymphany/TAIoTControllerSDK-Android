@@ -287,6 +287,40 @@ public class BleManager implements BleEngine.UpdatesDelegate{
     }
 
     /**
+     * Use this method get charge status of current speaker, the value 0 is not charge, the value 1 is charge
+     *
+     * The method didUpdateChargeStatus will call back.
+     *
+     * @see onBleListener
+     *
+     */
+    public void readChargeStatus(){
+        byte[] data = new byte[2];
+        data[0] = 0x04;
+        data[1] = 0x00;
+        mBleEngine.write(null,null,null,data,Constant.ActionCharacteristicUUID);
+        workHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mBleEngine.read(Constant.CustomAudioControlServiceUUID,Constant.ActionCharacteristicUUID);
+            }
+        },1000L);
+    }
+
+    /**
+     * Use this method will set charge status that you want
+     *
+     * @param status The charge status want to set, the value is 0 to 1
+     */
+    public void setChargeStatus(int status){
+        byte[] data = new byte[3];
+        data[0] = 0x04;
+        data[1] = 0x01;
+        data[2] = (byte)status;
+        mBleEngine.write(null,null,null, data, Constant.ActionCharacteristicUUID);
+    }
+
+    /**
      * Add BleListener, if have some update the onBleListener interfaces will receive notify
      *
      * @param listener
@@ -438,6 +472,15 @@ public class BleManager implements BleEngine.UpdatesDelegate{
         }
     }
 
+    @Override
+    public void didUpdateChargeStatus(int chargeStatus) {
+        synchronized (mOnBleListeners){
+            for (onBleListener listener : mOnBleListeners){
+                listener.didUpdateChargeStatus(chargeStatus);
+            }
+        }
+    }
+
     /**
      * <p>This listener gets events related to the BLE feature and data or Wifi connect status of a device. It informs when any of
      * its state change.</p>
@@ -573,5 +616,12 @@ public class BleManager implements BleEngine.UpdatesDelegate{
          *
          */
         void didUpdateAirplayHomeStatus(int airplayHomeStatus);
+
+        /**
+         *This method will call back when use readChargeStatus method to get charge status
+         *
+         * @param chargeStatus the new charge status for the speaker. the value 0 is not charge, the value 1 is charge
+         */
+        void didUpdateChargeStatus(int chargeStatus);
     }
 }
