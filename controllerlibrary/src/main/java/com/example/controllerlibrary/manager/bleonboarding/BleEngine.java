@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.ParcelUuid;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.SparseArray;
 
 
@@ -78,26 +79,26 @@ public class BleEngine {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
-            if(result.getScanRecord().getDeviceName() != null){
+            if (result.getScanRecord().getDeviceName() != null) {
                 taSystem = new TASystem();
                 manufacturerDataList = parseFromBytes(result.getScanRecord().getBytes());
                 manufacturerData = result.getScanRecord().getManufacturerSpecificData().valueAt(0);
-                if(manufacturerData.length != 0 && manufacturerData.length > 12){
-                    if( manufacturerDataList.size() == 1){
+                if (manufacturerData.length != 0 && manufacturerData.length > 12) {
+                    if (manufacturerDataList.size() == 1) {
                         manufacturerData1 = manufacturerDataList.get(0);
-                        taSystem.setSourceType((int)manufacturerData1[0]);
+                        taSystem.setSourceType((int) manufacturerData1[0]);
                         taSystem.setSerialNumber(new String((extractBytes(manufacturerData1, 1, manufacturerData1.length - 1))));
                         taSystem.setDeviceName(result.getDevice().getName());
                         taSystem.setDeviceAddress(result.getDevice().getAddress());
-                    }else if(manufacturerDataList.size() == 2){
+                    } else if (manufacturerDataList.size() == 2) {
                         manufacturerData1 = manufacturerDataList.get(0);
                         manufacturerData2 = manufacturerDataList.get(1);
-                        taSystem.setSourceType((int)manufacturerData1[0]);
+                        taSystem.setSourceType((int) manufacturerData1[0]);
                         taSystem.setSerialNumber(new String(extractBytes(manufacturerData2, 0, 12)));
-                        taSystem.setDeviceName(new String((extractBytes(manufacturerData2,12, manufacturerData2.length - 12))));
+                        taSystem.setDeviceName(new String((extractBytes(manufacturerData2, 12, manufacturerData2.length - 12))));
                         taSystem.setDeviceAddress(result.getDevice().getAddress());
                     }
-                }else{
+                } else {
                     taSystem.setDeviceName(result.getDevice().getName());
                     taSystem.setDeviceAddress(result.getDevice().getAddress());
                 }
@@ -131,7 +132,7 @@ public class BleEngine {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
 
-            if(newState == BluetoothProfile.STATE_CONNECTED){
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
                 mBluetoothGatt.requestMtu(200);
                 stopLeScan();
                 workHandler.postDelayed(new Runnable() {
@@ -139,10 +140,10 @@ public class BleEngine {
                     public void run() {
                         mBluetoothGatt.discoverServices();
                     }
-                },2000L);
-            }else if(newState == BluetoothProfile.STATE_DISCONNECTING){
+                }, 2000L);
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTING) {
                 mUpdatesDelegate.didUpdateBleConnectStatus(newState);
-            }else if(newState == BluetoothProfile.STATE_DISCONNECTED){
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 mUpdatesDelegate.didUpdateBleConnectStatus(newState);
             }
         }
@@ -156,98 +157,100 @@ public class BleEngine {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
-                if(characteristic.getUuid().equals(UUID.fromString(Constant.ConnectCharacteristicUUID))){
-                    byte[] data = characteristic.getValue();
-                    int value = (int)data[0];
-                    if(value == Constant.WIFI_DISCONNECT){
-                        mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_DISCONNECT);
-                    }else if(value == Constant.WIFI_CONNECTING){
-                        mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTING);
-                    }else if(value == Constant.WIFI_CONNECTED){
-                        mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTED);
-                    }
-                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.SourceSwitchCharacteristicUUID))){
-                    byte[] data = characteristic.getValue();
-                    int type = (int)data[0];
-                    if(type > 0){
-                        mUpdatesDelegate.didUpdateSourceType(type);
-                    }
-                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.SetNameCharacteristicUUID))){
-                    String deviceName = new String(characteristic.getValue());
-                    if(deviceName != null){
-                        mUpdatesDelegate.didUpdateDeviceName(deviceName);
-                    }
-                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.DeviceInfoFirmwareVersionCharacteristicUUID))){
-                    String firmwareVersion = new String(characteristic.getValue());
-                    if(firmwareVersion != null){
-                        mUpdatesDelegate.didUpdateFirmwareVersion(firmwareVersion);
-                    }
-                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.DeviceInfoSerialNumberCharacteristicUUID))){
-                    String serialNumber = new String(characteristic.getValue());
-                    if(serialNumber != null){
-                        mUpdatesDelegate.didUpdateSerialNumber(serialNumber);
-                    }
-                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.BatteryLevelCharacteristicUUID))){
-                    byte[] data = characteristic.getValue();
-                    int batteryLevel = (int)data[0];
-                    if(batteryLevel > -1){
-                        mUpdatesDelegate.didUpdateBatteryLevel(batteryLevel);
-                    }
-                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.LedControlCharacteristicUUID))){
-                    byte[] data = characteristic.getValue();
-                    int ledPattern = (int)data[0];
-                    int ledAnimation = (int)data[1];
-                    if(ledPattern > -1 || ledAnimation > -1){
-                        mUpdatesDelegate.didUpdateLedPattern(ledPattern);
-                        mUpdatesDelegate.didUpdateLedAnimation(ledAnimation);
-                    }
-                }else if(characteristic.getUuid().equals(UUID.fromString(Constant.ActionCharacteristicUUID))){
-                    byte[] data = characteristic.getValue();
-                    int command = (int)data[0];
-                 if(command == 1) {
-                     String macAddress = null;
-
-                     int btStatus = (int) data[18];
-                     byte[] btMacAddress = new byte[17];
-                     ArrayList<String> listName = new ArrayList<>();
-                     String name1 = null;
-                     String name2 = null;
-                     if (data.length >= 19) {
-                         for (int i = 0; i < btMacAddress.length; i++) {
-                             btMacAddress[i] = data[i + 1];
-                         }
-                         macAddress = new String(btMacAddress);
-                     }
-
-                     if (btStatus == 0) {
-                         mUpdatesDelegate.didUpdateBTConnectStatus(btStatus);
-                         if (macAddress != null) {
-                             mUpdatesDelegate.didUpdateBTMacAddressAndDeviceName(macAddress.toUpperCase(), listName);
-                         }
-                     } else if (btStatus == 1) {
-                         mUpdatesDelegate.didUpdateBTConnectStatus(btStatus);
-                         name1 = new String(extractBytes(data, 20, data[19]));
-                         listName.add(name1);
-                         mUpdatesDelegate.didUpdateBTMacAddressAndDeviceName(macAddress.toUpperCase(), listName);
-
-                     } else if (btStatus == 2) {
-                         mUpdatesDelegate.didUpdateBTConnectStatus(btStatus);
-                         name1 = new String(extractBytes(data, 20, data[19]));
-                         name2 = new String(extractBytes(data, 19 + data[19] + 2, data[19 + data[19] + 1]));
-                         listName.add(name1);
-                         listName.add(name2);
-                         mUpdatesDelegate.didUpdateBTMacAddressAndDeviceName(macAddress.toUpperCase(), listName);
-                     }
-                  }else if(command == 3){
-                         mUpdatesDelegate.didUpdateAirplayHomeStatus((int) data[1]);
-                  }
+            if (characteristic.getUuid().equals(UUID.fromString(Constant.ConnectCharacteristicUUID))) {
+                byte[] data = characteristic.getValue();
+                int value = (int) data[0];
+                if (value == Constant.WIFI_DISCONNECT) {
+                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_DISCONNECT);
+                } else if (value == Constant.WIFI_CONNECTING) {
+                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTING);
+                } else if (value == Constant.WIFI_CONNECTED) {
+                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTED);
                 }
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.SourceSwitchCharacteristicUUID))) {
+                byte[] data = characteristic.getValue();
+                int type = (int) data[0];
+                if (type > 0) {
+                    mUpdatesDelegate.didUpdateSourceType(type);
+                }
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.SetNameCharacteristicUUID))) {
+                String deviceName = new String(characteristic.getValue());
+                if (deviceName != null) {
+                    mUpdatesDelegate.didUpdateDeviceName(deviceName);
+                }
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.DeviceInfoFirmwareVersionCharacteristicUUID))) {
+                String firmwareVersion = new String(characteristic.getValue());
+                if (firmwareVersion != null) {
+                    mUpdatesDelegate.didUpdateFirmwareVersion(firmwareVersion);
+                }
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.DeviceInfoSerialNumberCharacteristicUUID))) {
+                String serialNumber = new String(characteristic.getValue());
+                if (serialNumber != null) {
+                    mUpdatesDelegate.didUpdateSerialNumber(serialNumber);
+                }
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.BatteryLevelCharacteristicUUID))) {
+                byte[] data = characteristic.getValue();
+                int batteryLevel = (int) data[0];
+                if (batteryLevel > -1) {
+                    mUpdatesDelegate.didUpdateBatteryLevel(batteryLevel);
+                }
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.LedControlCharacteristicUUID))) {
+                byte[] data = characteristic.getValue();
+                int ledPattern = (int) data[0];
+                int ledAnimation = (int) data[1];
+                if (ledPattern > -1 || ledAnimation > -1) {
+                    mUpdatesDelegate.didUpdateLedPattern(ledPattern);
+                    mUpdatesDelegate.didUpdateLedAnimation(ledAnimation);
+                }
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.ActionCharacteristicUUID))) {
+                byte[] data = characteristic.getValue();
+                int command = (int) data[0];
+                if (command == 1) {
+                    String macAddress = null;
+
+                    int btStatus = (int) data[18];
+                    byte[] btMacAddress = new byte[17];
+                    ArrayList<String> listName = new ArrayList<>();
+                    String name1 = null;
+                    String name2 = null;
+                    if (data.length >= 19) {
+                        for (int i = 0; i < btMacAddress.length; i++) {
+                            btMacAddress[i] = data[i + 1];
+                        }
+                        macAddress = new String(btMacAddress);
+                    }
+
+                    if (btStatus == 0) {
+                        mUpdatesDelegate.didUpdateBTConnectStatus(btStatus);
+                        if (macAddress != null) {
+                            mUpdatesDelegate.didUpdateBTMacAddressAndDeviceName(macAddress.toUpperCase(), listName);
+                        }
+                    } else if (btStatus == 1) {
+                        mUpdatesDelegate.didUpdateBTConnectStatus(btStatus);
+                        name1 = new String(extractBytes(data, 20, data[19]));
+                        listName.add(name1);
+                        mUpdatesDelegate.didUpdateBTMacAddressAndDeviceName(macAddress.toUpperCase(), listName);
+
+                    } else if (btStatus == 2) {
+                        mUpdatesDelegate.didUpdateBTConnectStatus(btStatus);
+                        name1 = new String(extractBytes(data, 20, data[19]));
+                        name2 = new String(extractBytes(data, 19 + data[19] + 2, data[19 + data[19] + 1]));
+                        listName.add(name1);
+                        listName.add(name2);
+                        mUpdatesDelegate.didUpdateBTMacAddressAndDeviceName(macAddress.toUpperCase(), listName);
+                    }
+                } else if (command == 3) {
+                    mUpdatesDelegate.didUpdateAirplayHomeStatus((int) data[1]);
+                } else if (command == 4) {
+                    mUpdatesDelegate.didUpdateChargeSwitchOnOff((int) data[1]);
+                }
+            }
         }
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
-            if(status == BluetoothGatt.GATT_SUCCESS){
+            if (status == BluetoothGatt.GATT_SUCCESS) {
 
             }
         }
@@ -255,65 +258,65 @@ public class BleEngine {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            if(characteristic.getUuid().equals(UUID.fromString(Constant.ScanCharacteristicUUID))){
-               String response = new String(characteristic.getValue());
-               if(response != null){
-                   try {
-                       JSONObject object1 = new JSONObject(response);
-                       WifiBean wifiBean = new WifiBean();
-                       wifiBean.setSSid(object1.getString("ssid"));
-                       wifiBean.setSignal(object1.getString("signal"));
-                       JSONObject object2 = object1.getJSONObject("encryption");
-                       wifiBean.setWep((object2.getString("wep").equals("false") ) ? false : true);
-                       wifiBean.setWpa(object2.getString("wpa"));
-                       if(wifiBean != null){
-                           mUpdatesDelegate.didUpdateWifi(wifiBean);
-                       }
-                   } catch (JSONException e) {
-                       e.printStackTrace();
-                   }
-               }
-            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.ConnectCharacteristicUUID))){
-               byte[] data = characteristic.getValue();
-               int status = (int)data[0];
-               if(status == Constant.WIFI_DISCONNECT){
-                   mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_DISCONNECT);
-               }else if(status == Constant.WIFI_CONNECTING){
-                   mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTING);
-               }else if(status == Constant.WIFI_CONNECTED){
-                   mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTED);
-               }else{
-                   mUpdatesDelegate.didUpdateBleConnectStatus(status);
-               }
-            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.SourceSwitchCharacteristicUUID))){
+            if (characteristic.getUuid().equals(UUID.fromString(Constant.ScanCharacteristicUUID))) {
+                String response = new String(characteristic.getValue());
+                if (response != null) {
+                    try {
+                        JSONObject object1 = new JSONObject(response);
+                        WifiBean wifiBean = new WifiBean();
+                        wifiBean.setSSid(object1.getString("ssid"));
+                        wifiBean.setSignal(object1.getString("signal"));
+                        JSONObject object2 = object1.getJSONObject("encryption");
+                        wifiBean.setWep((object2.getString("wep").equals("false")) ? false : true);
+                        wifiBean.setWpa(object2.getString("wpa"));
+                        if (wifiBean != null) {
+                            mUpdatesDelegate.didUpdateWifi(wifiBean);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.ConnectCharacteristicUUID))) {
                 byte[] data = characteristic.getValue();
-                int type = (int)data[0];
-                if(type > 0){
+                int status = (int) data[0];
+                if (status == Constant.WIFI_DISCONNECT) {
+                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_DISCONNECT);
+                } else if (status == Constant.WIFI_CONNECTING) {
+                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTING);
+                } else if (status == Constant.WIFI_CONNECTED) {
+                    mUpdatesDelegate.didUpdateWifiConnectStatus(Constant.WIFI_CONNECTED);
+                } else {
+                    mUpdatesDelegate.didUpdateBleConnectStatus(status);
+                }
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.SourceSwitchCharacteristicUUID))) {
+                byte[] data = characteristic.getValue();
+                int type = (int) data[0];
+                if (type > 0) {
                     mUpdatesDelegate.didUpdateSourceType(type);
                 }
-            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.SetNameCharacteristicUUID))){
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.SetNameCharacteristicUUID))) {
                 String deviceName = new String(characteristic.getValue());
-                if(deviceName != null){
+                if (deviceName != null) {
                     mUpdatesDelegate.didUpdateDeviceName(deviceName);
                 }
-            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.BatteryLevelCharacteristicUUID))){
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.BatteryLevelCharacteristicUUID))) {
                 byte[] data = characteristic.getValue();
-                int batteryLevel = (int)data[0];
-                if(batteryLevel > -1){
+                int batteryLevel = (int) data[0];
+                if (batteryLevel > -1) {
                     mUpdatesDelegate.didUpdateBatteryLevel(batteryLevel);
                 }
-            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.LedControlCharacteristicUUID))){
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.LedControlCharacteristicUUID))) {
                 byte[] data = characteristic.getValue();
-                int ledPattern = (int)data[0];
-                int ledAnimation = (int)data[1];
-                if(ledPattern > -1 || ledAnimation > -1){
+                int ledPattern = (int) data[0];
+                int ledAnimation = (int) data[1];
+                if (ledPattern > -1 || ledAnimation > -1) {
                     mUpdatesDelegate.didUpdateLedPattern(ledPattern);
                     mUpdatesDelegate.didUpdateLedAnimation(ledAnimation);
                 }
-            }else if(characteristic.getUuid().equals(UUID.fromString(Constant.ActionCharacteristicUUID))){
+            } else if (characteristic.getUuid().equals(UUID.fromString(Constant.ActionCharacteristicUUID))) {
                 byte[] data = characteristic.getValue();
                 int command = (int) data[0];
-                if(command == 3){
+                if (command == 3) {
                     mUpdatesDelegate.didUpdateAirplayHomeStatus((int) data[1]);
                 }
             }
@@ -327,17 +330,17 @@ public class BleEngine {
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
             super.onDescriptorWrite(gatt, descriptor, status);
-            if(status == BluetoothGatt.GATT_SUCCESS){
+            if (status == BluetoothGatt.GATT_SUCCESS) {
                 notifyRegisterMap.remove(descriptor.getCharacteristic().getUuid().toString().trim());
-                if(notifyDataRegisterFlag){
+                if (notifyDataRegisterFlag) {
                     return;
                 }
-                if( notifyRegisterMap.size() == 0){
+                if (notifyRegisterMap.size() == 0) {
                     notifyDataRegisterFlag = true;
                     mUpdatesDelegate.didUpdateBleConnectStatus(2);
                 }
-                for(Map.Entry<String,String> entry: notifyRegisterMap.entrySet()){
-                     registerListener(true, entry.getValue(), entry.getKey());
+                for (Map.Entry<String, String> entry : notifyRegisterMap.entrySet()) {
+                    registerListener(true, entry.getValue(), entry.getKey());
                 }
             }
         }
@@ -359,7 +362,7 @@ public class BleEngine {
         }
     };
 
-    public void init(Context context){
+    public void init(Context context) {
         mContext = context;
         HandlerThread handlerThread = new HandlerThread("Ble work");
         handlerThread.start();
@@ -368,31 +371,31 @@ public class BleEngine {
         mBluetoothAdapter = bluetoothManager.getAdapter();
         bluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
         initNotifyData();
-        if(!mBluetoothAdapter.isEnabled()){
+        if (!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
         }
     }
 
-    public static void setDelegate(UpdatesDelegate delegate){
+    public static void setDelegate(UpdatesDelegate delegate) {
         mUpdatesDelegate = delegate;
     }
 
-    public void startLeScan(String uuid){
-       workHandler.postDelayed(new Runnable() {
-           @Override
-           public void run() {
-               ScanFilter.Builder filterBuilder = new ScanFilter.Builder();
-               mScanFilter = filterBuilder.setServiceUuid(ParcelUuid.fromString(uuid)).build();
-               scanFilterList.add(mScanFilter);
-               ScanSettings.Builder settingBuilder = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED);
-               mScanSettings = settingBuilder.build();
-               bluetoothLeScanner.startScan(scanFilterList, mScanSettings, leCallback);
-           }
-       },1000L);
+    public void startLeScan(String uuid) {
+        workHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ScanFilter.Builder filterBuilder = new ScanFilter.Builder();
+                mScanFilter = filterBuilder.setServiceUuid(ParcelUuid.fromString(uuid)).build();
+                scanFilterList.add(mScanFilter);
+                ScanSettings.Builder settingBuilder = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED);
+                mScanSettings = settingBuilder.build();
+                bluetoothLeScanner.startScan(scanFilterList, mScanSettings, leCallback);
+            }
+        }, 1000L);
     }
 
 
-    public void stopLeScan(){
+    public void stopLeScan() {
         workHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -401,31 +404,31 @@ public class BleEngine {
         });
     }
 
-    public boolean connect(String address){
+    public boolean connect(String address) {
 
-        if(mBluetoothAdapter == null && address == null){
+        if (mBluetoothAdapter == null && address == null) {
             return false;
         }
 
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
 
-        if(device == null){
+        if (device == null) {
             return false;
         }
         initNotifyData();
         workHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                mBluetoothGatt = device.connectGatt(mContext, false ,gattCallback);
+                mBluetoothGatt = device.connectGatt(mContext, false, gattCallback);
             }
-        },1500L);
+        }, 1500L);
 
         return true;
     }
 
 
-    public void disconnect(){
-        if(mBluetoothAdapter == null || mBluetoothGatt == null){
+    public void disconnect() {
+        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             return;
         }
         workHandler.post(new Runnable() {
@@ -438,8 +441,8 @@ public class BleEngine {
 
     }
 
-    public void close(){
-        if(mBluetoothGatt == null){
+    public void close() {
+        if (mBluetoothGatt == null) {
             return;
         }
         workHandler.post(new Runnable() {
@@ -454,17 +457,17 @@ public class BleEngine {
         });
     }
 
-    public void read(String serviceUUID, String characteristicUUID){
-        if(mBluetoothGatt == null){
-          return;
+    public void read(String serviceUUID, String characteristicUUID) {
+        if (mBluetoothGatt == null) {
+            return;
         }
         workHandler.post(new Runnable() {
             @Override
             public void run() {
                 BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(serviceUUID));
-                if(gattService != null){
+                if (gattService != null) {
                     BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(characteristicUUID));
-                    if(gattCharacteristic != null){
+                    if (gattCharacteristic != null) {
                         mBluetoothGatt.readCharacteristic(gattCharacteristic);
                     }
                 }
@@ -472,37 +475,37 @@ public class BleEngine {
         });
     }
 
-    public void write(String ssid, String password, String strValue, byte[] value, String CharacteristicUUID){
-        if(mBluetoothGatt == null){
+    public void write(String ssid, String password, String strValue, byte[] value, String CharacteristicUUID) {
+        if (mBluetoothGatt == null) {
             return;
         }
         workHandler.post(new Runnable() {
             @Override
             public void run() {
                 BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(Constant.CustomAudioControlServiceUUID));
-                if( gattService != null){
+                if (gattService != null) {
 
-                    if(CharacteristicUUID != null && TextUtils.equals(Constant.ConnectCharacteristicUUID, CharacteristicUUID)){
+                    if (CharacteristicUUID != null && TextUtils.equals(Constant.ConnectCharacteristicUUID, CharacteristicUUID)) {
                         BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(CharacteristicUUID));
-                        if(gattCharacteristic != null){
-                              if(ssid != null && password != null){
-                                  String JsonBean = "{'ssid':'"+ ssid + "','pwd':'"+ password +"'}";
-                                  try{
-                                      JSONObject jsonObject = new JSONObject(JsonBean);
-                                      String data = jsonObject.toString();
-                                      gattCharacteristic.setValue(data.getBytes());
-                                      mBluetoothGatt.writeCharacteristic(gattCharacteristic);
-                                  }catch (JSONException e) {
-                                      e.printStackTrace();
-                                  }
-                              }
+                        if (gattCharacteristic != null) {
+                            if (ssid != null && password != null) {
+                                String JsonBean = "{'ssid':'" + ssid + "','pwd':'" + password + "'}";
+                                try {
+                                    JSONObject jsonObject = new JSONObject(JsonBean);
+                                    String data = jsonObject.toString();
+                                    gattCharacteristic.setValue(data.getBytes());
+                                    mBluetoothGatt.writeCharacteristic(gattCharacteristic);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                         }
-                    }else{
+                    } else {
                         BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(CharacteristicUUID));
-                        if(value != null && gattCharacteristic != null){
+                        if (value != null && gattCharacteristic != null) {
                             gattCharacteristic.setValue(value);
                             mBluetoothGatt.writeCharacteristic(gattCharacteristic);
-                        }else if(strValue != null && gattCharacteristic != null){
+                        } else if (strValue != null && gattCharacteristic != null) {
                             gattCharacteristic.setValue(strValue.trim().getBytes());
                             mBluetoothGatt.writeCharacteristic(gattCharacteristic);
                         }
@@ -512,31 +515,31 @@ public class BleEngine {
         });
     }
 
-    public void registerListener(boolean isRegister, String serviceUUID, String characteristicUUID){
+    public void registerListener(boolean isRegister, String serviceUUID, String characteristicUUID) {
         workHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-              BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(serviceUUID));
-             if( gattService != null) {
-                BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(characteristicUUID));
-                if (gattCharacteristic != null) {
-                    mBluetoothGatt.setCharacteristicNotification(gattCharacteristic, isRegister);
-                }else{
-                    return;
-                }
+                BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(serviceUUID));
+                if (gattService != null) {
+                    BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(characteristicUUID));
+                    if (gattCharacteristic != null) {
+                        mBluetoothGatt.setCharacteristicNotification(gattCharacteristic, isRegister);
+                    } else {
+                        return;
+                    }
 
-                UUID descriptorUUID = UUID.fromString(Constant.DescriptorUUID);
-                BluetoothGattDescriptor descriptor = gattCharacteristic.getDescriptor(descriptorUUID);
-                if(descriptor != null){
-                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                    mBluetoothGatt.writeDescriptor(descriptor);
+                    UUID descriptorUUID = UUID.fromString(Constant.DescriptorUUID);
+                    BluetoothGattDescriptor descriptor = gattCharacteristic.getDescriptor(descriptorUUID);
+                    if (descriptor != null) {
+                        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                        mBluetoothGatt.writeDescriptor(descriptor);
+                    }
                 }
-              }
             }
-        },500L);
+        }, 500L);
     }
 
-    public void initNotifyData(){
+    public void initNotifyData() {
         notifyRegisterMap = new HashMap<>();
         notifyRegisterMap.put(Constant.ScanCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
         notifyRegisterMap.put(Constant.ConnectCharacteristicUUID, Constant.CustomAudioControlServiceUUID);
@@ -553,21 +556,36 @@ public class BleEngine {
         return bytes;
     }
 
-    public interface UpdatesDelegate{
+    public interface UpdatesDelegate {
         void didUpdateWifi(WifiBean wifiBean);
+
         void didUpdateBleConnectStatus(int status);
+
         void didUpdateLeDevices(TASystem taSystem, int rssi);
+
         void didUpdateWifiConnectStatus(int status);
+
         void didUpdateSourceType(int sourceType);
+
         void didUpdateDeviceName(String deviceName);
+
         void didUpdateFirmwareVersion(String firmwareVersion);
+
         void didUpdateBatteryLevel(int batteryLevel);
+
         void didUpdateLedAnimation(int ledAnimation);
+
         void didUpdateLedPattern(int ledPattern);
+
         void didUpdateBTConnectStatus(int btConnectStatus);
+
         void didUpdateBTMacAddressAndDeviceName(String btMacAddress, ArrayList<String> listName);
+
         void didUpdateSerialNumber(String serialNumber);
+
         void didUpdateAirplayHomeStatus(int airplayHomeStatus);
+
+        void didUpdateChargeSwitchOnOff(int chargeStatus);
     }
 
 
@@ -582,9 +600,9 @@ public class BleEngine {
 
         String localName = null;
         int txPowerLevel = Integer.MIN_VALUE;
-         List<byte[]> manufactureDataList = new ArrayList<>();
-         byte[] manufacturerData1 = null;
-         byte[] manufacturerData2 = null;
+        List<byte[]> manufactureDataList = new ArrayList<>();
+        byte[] manufacturerData1 = null;
+        byte[] manufacturerData2 = null;
 
         SparseArray<byte[]> manufacturerData = new SparseArray<byte[]>();
         int parseManufacturerDataTimes = 0;
@@ -645,10 +663,10 @@ public class BleEngine {
                                 + (scanRecord[currentPos] & 0xFF);
                         byte[] manufacturerDataBytes = extractBytes(scanRecord, currentPos + 2,
                                 dataLength - 2);
-                        if(parseManufacturerDataTimes == 0){
-                            manufacturerData1 =  manufacturerDataBytes;
+                        if (parseManufacturerDataTimes == 0) {
+                            manufacturerData1 = manufacturerDataBytes;
                             manufactureDataList.add(manufacturerData1);
-                        }else if(parseManufacturerDataTimes == 1){
+                        } else if (parseManufacturerDataTimes == 1) {
                             manufacturerData2 = manufacturerDataBytes;
                             manufactureDataList.add(manufacturerData2);
                         }
@@ -665,11 +683,11 @@ public class BleEngine {
             if (serviceUuids.isEmpty()) {
                 serviceUuids = null;
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             // As the record is invalid, ignore all the parsed results for this packet
             // and return an empty record with raw scanRecord bytes in results
         }
-        return  manufactureDataList;
+        return manufactureDataList;
     }
 }
 
