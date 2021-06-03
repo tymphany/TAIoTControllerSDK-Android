@@ -274,11 +274,11 @@ public class BleManager implements BleEngine.UpdatesDelegate {
     /**
      * Use this method get charge status of current speaker, the value 0 is not charge, the value 1 is charge
      * <p>
-     * The method didUpdateChargeStatus will call back.
+     * The method didUpdateChargeSwitchOnOff will call back.
      *
      * @see onBleListener
      */
-    public void readChargeStatus() {
+    public void readChargeSwitchStatus() {
         byte[] data = new byte[2];
         data[0] = 0x04;
         data[1] = 0x00;
@@ -296,7 +296,7 @@ public class BleManager implements BleEngine.UpdatesDelegate {
      *
      * @param status The charge status want to set, the value is 0 to 1
      */
-    public void setChargeStatus(int status) {
+    public void setChargeSwitchStatus(int status) {
         byte[] data = new byte[3];
         data[0] = 0x04;
         data[1] = 0x01;
@@ -457,10 +457,10 @@ public class BleManager implements BleEngine.UpdatesDelegate {
     }
 
     @Override
-    public void didUpdateChargeStatus(int chargeStatus) {
+    public void didUpdateChargeSwitchOnOff(int chargeStatus) {
         synchronized (mOnBleListeners) {
             for (onBleListener listener : mOnBleListeners) {
-                listener.didUpdateChargeStatus(chargeStatus);
+                listener.didUpdateChargeSwitchOnOff(chargeStatus);
             }
         }
     }
@@ -591,10 +591,10 @@ public class BleManager implements BleEngine.UpdatesDelegate {
         void didUpdateAirplayHomeStatus(int airplayHomeStatus);
 
         /**
-         * This method will call back when use readChargeStatus method to get charge status
+         * This method will call back when use readChargeSwitchStatus method to get charge status
          *
          * @param chargeStatus the new charge status for the speaker. the value 0 is not charge, the value 1 is charge
          */
-        void didUpdateChargeStatus(int chargeStatus);
+        void didUpdateChargeSwitchOnOff(int chargeStatus);
     }
 }

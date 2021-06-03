@@ -242,7 +242,7 @@ public class BleEngine {
                 } else if (command == 3) {
                     mUpdatesDelegate.didUpdateAirplayHomeStatus((int) data[1]);
                 } else if (command == 4) {
-                    mUpdatesDelegate.didUpdateChargeStatus((int) data[1]);
+                    mUpdatesDelegate.didUpdateChargeSwitchOnOff((int) data[1]);
                 }
             }
         }
@@ -585,7 +585,7 @@ public class BleEngine {
 
         void didUpdateAirplayHomeStatus(int airplayHomeStatus);
 
-        void didUpdateChargeStatus(int chargeStatus);
+        void didUpdateChargeSwitchOnOff(int chargeStatus);
     }
 
 
