@@ -205,7 +205,6 @@ public class BleEngine {
             } else if (characteristic.getUuid().equals(UUID.fromString(Constant.ActionCharacteristicUUID))) {
                 byte[] data = characteristic.getValue();
                 int command = (int) data[0];
-                Log.e("Jasper", "command=" + command);
                 if (command == 1) {
                     String macAddress = null;
 
@@ -243,7 +242,6 @@ public class BleEngine {
                 } else if (command == 3) {
                     mUpdatesDelegate.didUpdateAirplayHomeStatus((int) data[1]);
                 } else if (command == 4) {
-                    Log.e("Jasper", "ChargeStatus=" + (int) data[1]);
                     mUpdatesDelegate.didUpdateChargeStatus((int) data[1]);
                 }
             }
