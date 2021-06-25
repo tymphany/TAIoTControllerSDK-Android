@@ -272,7 +272,7 @@ public class BleManager implements BleEngine.UpdatesDelegate {
     }
 
     /**
-     * Use this method get charge status of current speaker, the value 0 is not charge, the value 1 is charge
+     * Use this method get the Switch for charging without shutdown status for the speaker. the value 0 is open, the value 1 close
      * <p>
      * The method didUpdateChargeSwitchOnOff will call back.
      *
@@ -307,7 +307,7 @@ public class BleManager implements BleEngine.UpdatesDelegate {
     /**
      * Use this method get aptx status of current speaker, the value 0 TODO
      * <p>
-     * The method didUpdateChargeSwitchOnOff will call back.
+     * The method didUpdateAptxStatus will call back.
      *
      * @see onBleListener
      */
@@ -633,9 +633,9 @@ public class BleManager implements BleEngine.UpdatesDelegate {
         void didUpdateAirplayHomeStatus(int airplayHomeStatus);
 
         /**
-         * This method will call back when use readChargeSwitchStatus method to get charge status
+         * This method will call back when use readChargeSwitchStatus method to get charging without shutdown status
          *
-         * @param chargeStatus the new charge status for the speaker. the value 0 is not charge, the value 1 is charge
+         * @param chargeStatus the charging without shutdown status for the speaker. the value 0 is open, the value 1 close
          */
         void didUpdateChargeSwitchOnOff(int chargeStatus);
 
