@@ -305,6 +305,39 @@ public class BleManager implements BleEngine.UpdatesDelegate {
     }
 
     /**
+     * Use this method get aptx status of current speaker, the value 0 TODO
+     * <p>
+     * The method didUpdateChargeSwitchOnOff will call back.
+     *
+     * @see onBleListener
+     */
+    public void readAptxStatus() {
+        byte[] data = new byte[2];
+        data[0] = 0x04;
+        data[1] = 0x00;
+        mBleEngine.write(null, null, null, data, Constant.ActionCharacteristicUUID);
+        workHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.ActionCharacteristicUUID);
+            }
+        }, 1000L);
+    }
+
+    /**
+     * Use this method will set aptx status that you want
+     *
+     * @param status The aptx status want to set, the value is 0 to 1
+     */
+    public void setAptxStatus(int status) {
+        byte[] data = new byte[3];
+        data[0] = 0x04;
+        data[1] = 0x01;
+        data[2] = (byte) status;
+        mBleEngine.write(null, null, null, data, Constant.ActionCharacteristicUUID);
+    }
+
+    /**
      * Add BleListener, if have some update the onBleListener interfaces will receive notify
      *
      * @param listener
@@ -465,6 +498,15 @@ public class BleManager implements BleEngine.UpdatesDelegate {
         }
     }
 
+    @Override
+    public void didUpdateAptxStatus(int aptxStatus) {
+        synchronized (mOnBleListeners) {
+            for (onBleListener listener : mOnBleListeners) {
+                listener.didUpdateAptxStatus(aptxStatus);
+            }
+        }
+    }
+
     /**
      * <p>This listener gets events related to the BLE feature and data or Wifi connect status of a device. It informs when any of
      * its state change.</p>
@@ -596,5 +638,12 @@ public class BleManager implements BleEngine.UpdatesDelegate {
          * @param chargeStatus the new charge status for the speaker. the value 0 is not charge, the value 1 is charge
          */
         void didUpdateChargeSwitchOnOff(int chargeStatus);
+
+        /**
+         * This method will call back when use readAptxStatus method to get aptx status
+         *
+         * @param aptxStatus the aptx status for the speaker.
+         */
+        void didUpdateAptxStatus(int aptxStatus);
     }
 }
