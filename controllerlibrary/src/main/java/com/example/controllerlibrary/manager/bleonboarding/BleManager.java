@@ -305,7 +305,7 @@ public class BleManager implements BleEngine.UpdatesDelegate {
     }
 
     /**
-     * Use this method get aptx status of current speaker, the value 0 TODO
+     * Use this method get aptx status of current speaker, the value 0 is close, 1 is open.
      * <p>
      * The method didUpdateAptxStatus will call back.
      *
@@ -313,7 +313,7 @@ public class BleManager implements BleEngine.UpdatesDelegate {
      */
     public void readAptxStatus() {
         byte[] data = new byte[2];
-        data[0] = 0x04;
+        data[0] = 0x05;
         data[1] = 0x00;
         mBleEngine.write(null, null, null, data, Constant.ActionCharacteristicUUID);
         workHandler.postDelayed(new Runnable() {
@@ -331,7 +331,7 @@ public class BleManager implements BleEngine.UpdatesDelegate {
      */
     public void setAptxStatus(int status) {
         byte[] data = new byte[3];
-        data[0] = 0x04;
+        data[0] = 0x05;
         data[1] = 0x01;
         data[2] = (byte) status;
         mBleEngine.write(null, null, null, data, Constant.ActionCharacteristicUUID);
