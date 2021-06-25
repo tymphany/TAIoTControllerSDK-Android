@@ -272,7 +272,7 @@ public class BleManager implements BleEngine.UpdatesDelegate {
     }
 
     /**
-     * Use this method get the Switch for charging without shutdown status for the speaker. the value 0 is open, the value 1 close
+     * Use this method get the Switch for charging without shutdown status for the speaker. the value 0 is can turn off when you plug in the charging wires, the value 1 is Don't turn off when you plug in the charging wires
      * <p>
      * The method didUpdateChargeSwitchOnOff will call back.
      *
@@ -292,7 +292,7 @@ public class BleManager implements BleEngine.UpdatesDelegate {
     }
 
     /**
-     * Use this method will set charge status that you want
+     * Use this method will set charging without shutdown status that you want
      *
      * @param status The charge status want to set, the value is 0 to 1
      */
@@ -635,7 +635,7 @@ public class BleManager implements BleEngine.UpdatesDelegate {
         /**
          * This method will call back when use readChargeSwitchStatus method to get charging without shutdown status
          *
-         * @param chargeStatus the charging without shutdown status for the speaker. the value 0 is open, the value 1 close
+         * @param chargeStatus the charging without shutdown status for the speaker. the value 0 is can turn off when you plug in the charging wires, the value 1 is Don't turn off when you plug in the charging wires
          */
         void didUpdateChargeSwitchOnOff(int chargeStatus);
 
