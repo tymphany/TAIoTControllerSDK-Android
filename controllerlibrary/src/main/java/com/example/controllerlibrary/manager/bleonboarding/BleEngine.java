@@ -243,6 +243,8 @@ public class BleEngine {
                     mUpdatesDelegate.didUpdateAirplayHomeStatus((int) data[1]);
                 } else if (command == 4) {
                     mUpdatesDelegate.didUpdateChargeSwitchOnOff((int) data[1]);
+                } else if (command == 5){
+                    mUpdatesDelegate.didUpdateAptxStatus((int)data[1]);
                 }
             }
         }
@@ -586,6 +588,8 @@ public class BleEngine {
         void didUpdateAirplayHomeStatus(int airplayHomeStatus);
 
         void didUpdateChargeSwitchOnOff(int chargeStatus);
+
+        void didUpdateAptxStatus(int aptxStatus);
     }
 
 

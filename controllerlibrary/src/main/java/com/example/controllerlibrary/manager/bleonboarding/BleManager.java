@@ -272,7 +272,7 @@ public class BleManager implements BleEngine.UpdatesDelegate {
     }
 
     /**
-     * Use this method get charge status of current speaker, the value 0 is not charge, the value 1 is charge
+     * Use this method get the Switch for charging without shutdown status for the speaker. the value 0 is can turn off when you plug in the charging wires, the value 1 is Don't turn off when you plug in the charging wires
      * <p>
      * The method didUpdateChargeSwitchOnOff will call back.
      *
@@ -292,13 +292,46 @@ public class BleManager implements BleEngine.UpdatesDelegate {
     }
 
     /**
-     * Use this method will set charge status that you want
+     * Use this method will set charging without shutdown status that you want
      *
      * @param status The charge status want to set, the value is 0 to 1
      */
     public void setChargeSwitchStatus(int status) {
         byte[] data = new byte[3];
         data[0] = 0x04;
+        data[1] = 0x01;
+        data[2] = (byte) status;
+        mBleEngine.write(null, null, null, data, Constant.ActionCharacteristicUUID);
+    }
+
+    /**
+     * Use this method get aptx status of current speaker, the value 0 is close, 1 is open.
+     * <p>
+     * The method didUpdateAptxStatus will call back.
+     *
+     * @see onBleListener
+     */
+    public void readAptxStatus() {
+        byte[] data = new byte[2];
+        data[0] = 0x05;
+        data[1] = 0x00;
+        mBleEngine.write(null, null, null, data, Constant.ActionCharacteristicUUID);
+        workHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.ActionCharacteristicUUID);
+            }
+        }, 1000L);
+    }
+
+    /**
+     * Use this method will set aptx status that you want
+     *
+     * @param status The aptx status want to set, the value is 0 to 1
+     */
+    public void setAptxStatus(int status) {
+        byte[] data = new byte[3];
+        data[0] = 0x05;
         data[1] = 0x01;
         data[2] = (byte) status;
         mBleEngine.write(null, null, null, data, Constant.ActionCharacteristicUUID);
@@ -465,6 +498,15 @@ public class BleManager implements BleEngine.UpdatesDelegate {
         }
     }
 
+    @Override
+    public void didUpdateAptxStatus(int aptxStatus) {
+        synchronized (mOnBleListeners) {
+            for (onBleListener listener : mOnBleListeners) {
+                listener.didUpdateAptxStatus(aptxStatus);
+            }
+        }
+    }
+
     /**
      * <p>This listener gets events related to the BLE feature and data or Wifi connect status of a device. It informs when any of
      * its state change.</p>
@@ -591,10 +633,17 @@ public class BleManager implements BleEngine.UpdatesDelegate {
         void didUpdateAirplayHomeStatus(int airplayHomeStatus);
 
         /**
-         * This method will call back when use readChargeSwitchStatus method to get charge status
+         * This method will call back when use readChargeSwitchStatus method to get charging without shutdown status
          *
-         * @param chargeStatus the new charge status for the speaker. the value 0 is not charge, the value 1 is charge
+         * @param chargeStatus the charging without shutdown status for the speaker. the value 0 is can turn off when you plug in the charging wires, the value 1 is Don't turn off when you plug in the charging wires
          */
         void didUpdateChargeSwitchOnOff(int chargeStatus);
+
+        /**
+         * This method will call back when use readAptxStatus method to get aptx status
+         *
+         * @param aptxStatus the aptx status for the speaker.
+         */
+        void didUpdateAptxStatus(int aptxStatus);
     }
 }
