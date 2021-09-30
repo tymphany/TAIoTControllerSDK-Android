@@ -294,12 +294,6 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
          */
         void deviceDidNotifyMusicSourceStatus(IoTDevice ioTDevice,int ioTSourceStatus);
 
-        /**
-         *  Read that the Music Source status.
-         *
-         * @param ioTSourceStatus  The status of music Source.
-         */
-        void deviceDidReadMusicSourceStatus(IoTDevice ioTDevice,int ioTSourceStatus);
     }
 
     public interface onOtaListener{
