@@ -231,6 +231,10 @@ public class BleManager implements BleEngine.UpdatesDelegate {
         mBleEngine.read(Constant.CustomAudioControlServiceUUID, Constant.LedControlCharacteristicUUID);
     }
 
+    public void readStreamingStatus(){
+
+    };
+
     /**
      * Use this method get BT info that is current speaker BT connect status and BT mac address,
      * <p>
@@ -505,6 +509,11 @@ public class BleManager implements BleEngine.UpdatesDelegate {
                 listener.didUpdateAptxStatus(aptxStatus);
             }
         }
+    }
+
+    @Override
+    public void didUpdateStreamingStatus(int streamStatus) {
+        
     }
 
     /**

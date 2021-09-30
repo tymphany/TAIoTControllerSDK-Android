@@ -590,6 +590,8 @@ public class BleEngine {
         void didUpdateChargeSwitchOnOff(int chargeStatus);
 
         void didUpdateAptxStatus(int aptxStatus);
+
+        void didUpdateStreamingStatus(int streamStatus);
     }
 
 

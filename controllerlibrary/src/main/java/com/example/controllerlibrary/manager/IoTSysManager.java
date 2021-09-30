@@ -39,6 +39,7 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
   private final List<onOtaListener> mOtaListeners = new ArrayList<>();
   private final List<onSourceSwitchListener> mSourceSwitchListeners = new ArrayList<>();
   private final List<onAirplayListener> mAirplayListeners = new ArrayList<>();
+  private final List<onMusicSourceListener> mMusicSourceListeners = new ArrayList<>();
 
   public interface onIoTDeviceListener {
         /**
@@ -149,7 +150,21 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
             }
         }
     }
+    public void addMusicSourceListener(onMusicSourceListener listener){
+        synchronized (mMusicSourceListeners) {
+            if(listener != null && !mMusicSourceListeners.contains(listener)){
+                mMusicSourceListeners.add(listener);
+            }
+        }
+    }
 
+    public void removeMusicSourceListener(onMusicSourceListener listener){
+        synchronized (mMusicSourceListeners) {
+            if(listener != null){
+                mMusicSourceListeners.remove(listener);
+            }
+        }
+    }
     @Override
     public void onPlayerGroupAdd(IoTGroup ioTGroup) {
 
@@ -271,6 +286,21 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
 
         void deviceDidChangeStereoState(IoTDevice device, StereoAttr stereoAttr);
     }
+    public interface onMusicSourceListener{
+        /**
+         *  Notification that the music Source status for a device has changed.
+         *
+         * @param ioTSourceStatus  The status of music Source.
+         */
+        void deviceDidNotifyMusicSourceStatus(IoTDevice ioTDevice,int ioTSourceStatus);
+
+        /**
+         *  Read that the Music Source status.
+         *
+         * @param ioTSourceStatus  The status of music Source.
+         */
+        void deviceDidReadMusicSourceStatus(IoTDevice ioTDevice,int ioTSourceStatus);
+    }
 
     public interface onOtaListener{
         /**
@@ -308,7 +338,6 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
          */
         void deviceDidChangeAirplayHomeStatus(IoTDevice ioTDevice, int airplayHomeStatus);
     }
-
 	public interface onZigbeeListener {
       void onZbAdapterStateChanged(IoTDevice device);
       void onZbCoordinatorStateDidChanged(IoTDevice device);
@@ -667,6 +696,9 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
       return ioTDevice.getAirplayHomeStatus();
     }
 
+    public int getMusicSourceStatus(IoTDevice ioTDevice){
+        return 0;
+    }
   @Override
   public void didChangeName(IoTDevice device, String name) {
     synchronized (mSystemListeners) {
