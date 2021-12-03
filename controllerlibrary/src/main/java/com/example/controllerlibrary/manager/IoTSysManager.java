@@ -583,12 +583,17 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
      *
      * @param masterSerialNumber  The value is the Master speaker's SerialNumber
      *
+     * @param groupVerify The value is 0 to 2
+     *                    type value 0 is none
+     *                    type value 1 is connected, means: the speaker has been paired before this stereo pair
+     *                    type value 2 is disconnect, means: the speaker doesn't pair before this stereo pair
      *
+     * @param groupName the name of this stereo pair group
 
      * @param callback  Call back if you change success
      */
-    public void setAirPlayStereo(IoTDevice device, int groupId, int stereoType,int masterVerify,String masterSerialNumber,IoTCompletionCallback callback){
-        device.setAirPlayStereo(groupId,stereoType,masterVerify,masterSerialNumber,callback);
+    public void setAirPlayStereo(IoTDevice device, int groupId, int stereoType,int masterVerify,String masterSerialNumber,int groupVerify, String groupName, IoTCompletionCallback callback){
+        device.setAirPlayStereo(groupId,stereoType,masterVerify,masterSerialNumber, groupVerify, groupName, callback);
     }
 
     /**
@@ -726,6 +731,14 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
 
     public String getAirPlayStereoMasterSerialNumber(IoTDevice ioTDevice){
         return  ioTDevice.getAirPlayStereoMasterSerialNumber();
+    }
+
+    public int getStereoGroupVerify(IoTDevice ioTDevice) {
+        return ioTDevice.getStereoGroupVerify();
+    }
+
+    public String getStereoGroupName(IoTDevice ioTDevice) {
+        return ioTDevice.getStereoGroupName();
     }
     public String getFrimwareVersion(IoTDevice ioTDevice){
       return  ioTDevice.getFirmwareVersion();
