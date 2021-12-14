@@ -9,7 +9,7 @@ import com.qualcomm.qti.iotcontrollersdk.controller.IoTService;
 import com.qualcomm.qti.iotcontrollersdk.controller.interfaces.IoTCompletionCallback;
 import com.qualcomm.qti.iotcontrollersdk.controller.listeners.IoTAppListener;
 import com.qualcomm.qti.iotcontrollersdk.iotsys.resource.attributes.AVSOnboardingErrorAttr.Error;
-import com.qualcomm.qti.iotcontrollersdk.iotsys.resource.attributes.AirPlayStereoAttr;
+
 import com.qualcomm.qti.iotcontrollersdk.iotsys.resource.attributes.StereoAttr;
 import com.qualcomm.qti.iotcontrollersdk.model.iotsys.IoTSysInfo;
 import com.qualcomm.qti.iotcontrollersdk.repository.IoTDevice;
@@ -37,7 +37,6 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
   private final List<OnBluetoothListener> mOnBluetoothListeners = new ArrayList<>();
   private final List<onIoTDeviceListener> mIoTDeviceListeners = new ArrayList<>();
   private final List<onStereoListener> mStereoListeners = new ArrayList<>();
-  private final List<onAirPlayStereoListener> mAirPlayStereoListeners = new ArrayList<>();
   private final List<onOtaListener> mOtaListeners = new ArrayList<>();
   private final List<onSourceSwitchListener> mSourceSwitchListeners = new ArrayList<>();
   private final List<onAirplayListener> mAirplayListeners = new ArrayList<>();
@@ -100,21 +99,6 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         synchronized (mStereoListeners) {
             if (listener != null) {
                 mStereoListeners.remove(listener);
-            }
-        }
-    }
-    public void addAirPlayStereoListener(onAirPlayStereoListener listener) {
-        synchronized (mAirPlayStereoListeners) {
-            if (listener != null && !mAirPlayStereoListeners.contains(listener)) {
-                mAirPlayStereoListeners.add(listener);
-            }
-        }
-    }
-
-    public void removeAirPlayStereoListener(onAirPlayStereoListener listener) {
-        synchronized (mAirPlayStereoListeners) {
-            if (listener != null) {
-                mAirPlayStereoListeners.remove(listener);
             }
         }
     }
@@ -303,30 +287,6 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         void deviceDidChangeStereoState(IoTDevice device, StereoAttr stereoAttr);
     }
 
-    public interface onAirPlayStereoListener{
-        /**
-         * If stereo state is changed or you change success via setStereo method, this method will call back
-         *
-         * @param device
-         *              The IoT device for which the state has changed.
-         * @param stereoAttr
-         *              The stereoAttr contain groupid and stereo type (Type value 0 to 2 )
-         *              The masterVerify default value is 0 (masterVerify value 0 to n)
-         *              The masterSerialNumber default value is ""
-         *
-         *              masterVerify value 0 is airplayStereo
-         *              masterVerify value 1 is true master
-         *              masterVerify value n is true slave
-         *
-         *              when groupId and stereo type both are 0
-         *
-         *              type value 0 is stereo
-         *              type value 1 is left
-         *              type value 2 is right
-         */
-
-        void deviceDidChangeAirPlayStereoState(IoTDevice device, AirPlayStereoAttr stereoAttr);
-    }
     public interface onMusicSourceListener{
         /**
          *  Notification that the music Source status for a device has changed.
@@ -543,25 +503,6 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
   }
 
     /**
-     *  Use this method will set stereo pair, when two devices in a group you set groupId and stereo type both are 0 that is unPair
-     *
-     * @param device   Current device (Speaker) , you want to set stereoPair device
-     *
-     * @param groupId  The groupId is a unique number randomly generated, When stereo pair mode there are two devices must be same groupID
-     *
-     * @param stereoType  The value is 0 to 2
-     *
-     *              type value 0 is stereo
-     *              type value 1 is left
-     *              type value 2 is right
-     *
-     * @param callback  Call back if you change success
-     */
-
-  public void setStereo(IoTDevice device, int groupId, int stereoType, IoTCompletionCallback callback){
-        device.setStereo(groupId, stereoType, callback);
-  }
-    /**
      *  Use this method will set AirPlaystereo, when two devices in a group you set groupId and stereo and masterVerify and type both are 0 that is unPair
      *
      * @param device   Current device (Speaker) , you want to set stereoPair device
@@ -592,9 +533,10 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
 
      * @param callback  Call back if you change success
      */
-    public void setAirPlayStereo(IoTDevice device, int groupId, int stereoType,int masterVerify,String masterSerialNumber,int groupVerify, String groupName, IoTCompletionCallback callback){
-        device.setAirPlayStereo(groupId,stereoType,masterVerify,masterSerialNumber, groupVerify, groupName, callback);
-    }
+
+  public void setStereo(IoTDevice device, int groupId, int stereoType,int masterVerify,String masterSerialNumber,int groupVerify, String groupName, IoTCompletionCallback callback){
+        device.setStereo(groupId,stereoType,masterVerify,masterSerialNumber, groupVerify, groupName, callback);
+  }
 
     /**
      *  Asynchronously dispatch request to download firmware of the speaker.
@@ -717,20 +659,13 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
       return  ioTDevice.getStereoGroupId();
     }
 
-    public int getAirPlayStereoType(IoTDevice ioTDevice){
-        return ioTDevice.getAirPlayStereoType();
+
+    public int getStereoMasterVerify(IoTDevice ioTDevice){
+        return  ioTDevice.getStereoMasterVerify();
     }
 
-    public int getAirPlayStereoGroupId(IoTDevice ioTDevice){
-        return  ioTDevice.getAirPlayStereoGroupId();
-    }
-
-    public int getAirPlayStereoMasterVerify(IoTDevice ioTDevice){
-        return  ioTDevice.getAirPlayStereoMasterVerify();
-    }
-
-    public String getAirPlayStereoMasterSerialNumber(IoTDevice ioTDevice){
-        return  ioTDevice.getAirPlayStereoMasterSerialNumber();
+    public String getStereoMasterSerialNumber(IoTDevice ioTDevice){
+        return  ioTDevice.getStereoMasterSerialNumber();
     }
 
     public int getStereoGroupVerify(IoTDevice ioTDevice) {
@@ -838,14 +773,6 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         }
     }
 
-    @Override
-    public void deviceDidChangeAirPlayStereoState(IoTDevice ioTDevice, AirPlayStereoAttr airPlayStereoAttr) {
-        synchronized (mAirPlayStereoListeners) {
-            for (onAirPlayStereoListener listener : mAirPlayStereoListeners) {
-                listener.deviceDidChangeAirPlayStereoState(ioTDevice,airPlayStereoAttr);
-            }
-        }
-    }
 
     @Override
     public void deviceDidChangeOtaStatus(IoTDevice ioTDevice, IoTDevice.IoTOtaStatus ioTOtaStatus, OtaStatusBean otaStatusBean) {
