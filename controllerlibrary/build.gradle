@@ -1,6 +1,5 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.kezong.fat-aar'
-apply plugin: 'maven-publish'
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
@@ -10,7 +9,7 @@ android {
         minSdkVersion 25
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0.7"
+        versionName "1.0.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -28,15 +27,6 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    afterEvaluate {
-        publishing {
-            publications {
-                release(MavenPublication) {
-
-                }
-            }
-        }
-    }
 }
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
