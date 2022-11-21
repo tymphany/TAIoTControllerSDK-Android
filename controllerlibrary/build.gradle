@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.kezong.fat-aar'
-
+apply plugin: 'maven-publish'
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
@@ -29,7 +29,10 @@ android {
     }
 
 }
-
+task generateSourcesJar(type: Jar){
+    from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
