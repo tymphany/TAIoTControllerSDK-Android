@@ -10,7 +10,7 @@ android {
         minSdkVersion 25
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0.0"
+        versionName "1.0.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -29,10 +29,6 @@ android {
     }
 
 }
-task generateSourcesJar(type: Jar){
-    from android.sourceSets.main.java.srcDirs
-    classifier 'sources'
-}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -41,4 +37,19 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+}
+task generateSourcesJar(type: Jar){
+    from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
+}
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                groupId = 'com.example.controllerlibray' // 这个是依赖库的组 id
+                artifactId = 'TAControllerSDK'       // 依赖库的名称（jitpack 都不会使用到）
+                version ="1.0.2"                //当前版本依赖库版本号，这个jitpack不会使用到，只是我们开发者自己查看
+            }
+        }
+    }
 }
