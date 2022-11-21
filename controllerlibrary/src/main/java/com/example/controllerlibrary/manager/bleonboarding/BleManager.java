@@ -219,7 +219,16 @@ public class BleManager implements BleEngine.UpdatesDelegate {
      * @see onBleListener
      */
     public void readSerialNumber() {
-        mBleEngine.read(Constant.DeviceInfoServiceUUID, Constant.DeviceInfoSerialNumberCharacteristicUUID);
+        mBleEngine.read(Constant.DeviceInfoServiceUUID, Constant.DeviceInfoSerialNumberCharacteristicUUID, Constant.InfoType.SerialNumber);
+    }
+
+    /**
+     * Using this method to get sku , and the method didUpdateSku will call back
+     *
+     * @see onBleListener
+     */
+    public void readSku() {
+        mBleEngine.read(Constant.DeviceInfoServiceUUID, Constant.DeviceInfoSkuCharacteristicUUID, Constant.InfoType.Sku);
     }
 
     /**
@@ -485,6 +494,15 @@ public class BleManager implements BleEngine.UpdatesDelegate {
     }
 
     @Override
+    public void didUpdateSku(String sku) {
+        synchronized (mOnBleListeners) {
+            for (onBleListener listener : mOnBleListeners) {
+                listener.didUpdateSku(sku);
+            }
+        }
+    }
+
+    @Override
     public void didUpdateAirplayHomeStatus(int airplayHomeStatus) {
         synchronized (mOnBleListeners) {
             for (onBleListener listener : mOnBleListeners) {
@@ -632,6 +650,14 @@ public class BleManager implements BleEngine.UpdatesDelegate {
          * @param serialNumber The serial number of current device
          */
         void didUpdateSerialNumber(String serialNumber);
+
+        /**
+         * This method will call back when use readSku method to get Sku
+         *
+         * @param sku The SKU of current device
+         */
+        void didUpdateSku(String sku);
+
 
         /**
          * Notification that the AirPlay home status for a device has changed.

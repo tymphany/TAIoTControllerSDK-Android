@@ -30,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,7 @@ public class BleEngine {
     private ScanFilter mScanFilter = null;
     private List<ScanFilter> scanFilterList = new ArrayList<>();
     private byte[] manufacturerData = null;
+    private Constant.InfoType infoType = null;
 
     private TASystem taSystem = null;
 
@@ -94,7 +96,11 @@ public class BleEngine {
                         manufacturerData1 = manufacturerDataList.get(0);
                         manufacturerData2 = manufacturerDataList.get(1);
                         taSystem.setSourceType((int) manufacturerData1[0]);
-                        taSystem.setSerialNumber(new String(extractBytes(manufacturerData2, 0, 12)));
+                        String skuSerialNumber = new String(extractBytes(manufacturerData2, 0, 12));
+                        String sku = skuSerialNumber.substring(0,6);
+                        String serialNumber = skuSerialNumber;
+                        taSystem.setSerialNumber(serialNumber);
+                        taSystem.setSku(sku);
                         taSystem.setDeviceName(new String((extractBytes(manufacturerData2, 12, manufacturerData2.length - 12))));
                         taSystem.setDeviceAddress(result.getDevice().getAddress());
                     }
@@ -184,9 +190,19 @@ public class BleEngine {
                     mUpdatesDelegate.didUpdateFirmwareVersion(firmwareVersion);
                 }
             } else if (characteristic.getUuid().equals(UUID.fromString(Constant.DeviceInfoSerialNumberCharacteristicUUID))) {
-                String serialNumber = new String(characteristic.getValue());
-                if (serialNumber != null) {
-                    mUpdatesDelegate.didUpdateSerialNumber(serialNumber);
+                String skuSerialNumber = new String(characteristic.getValue());
+                if (skuSerialNumber != null) {
+                    String sku = skuSerialNumber.substring(0,6);
+                    String serialNumber = skuSerialNumber;
+                    if(infoType!=null && infoType==Constant.InfoType.SerialNumber){
+                        mUpdatesDelegate.didUpdateSerialNumber(serialNumber);
+                    }else if (infoType!= null && infoType==Constant.InfoType.Sku){
+                        mUpdatesDelegate.didUpdateSku(sku);
+                    } else {
+                        mUpdatesDelegate.didUpdateSerialNumber(serialNumber);
+                        mUpdatesDelegate.didUpdateSku(sku);
+                    }
+
                 }
             } else if (characteristic.getUuid().equals(UUID.fromString(Constant.BatteryLevelCharacteristicUUID))) {
                 byte[] data = characteristic.getValue();
@@ -477,6 +493,24 @@ public class BleEngine {
         });
     }
 
+    public void read(String serviceUUID, String characteristicUUID, Constant.InfoType type) {
+        infoType = type;
+        if (mBluetoothGatt == null) {
+            return;
+        }
+        workHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                BluetoothGattService gattService = mBluetoothGatt.getService(UUID.fromString(serviceUUID));
+                if (gattService != null) {
+                    BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(UUID.fromString(characteristicUUID));
+                    if (gattCharacteristic != null) {
+                        mBluetoothGatt.readCharacteristic(gattCharacteristic);
+                    }
+                }
+            }
+        });
+    }
     public void write(String ssid, String password, String strValue, byte[] value, String CharacteristicUUID) {
         if (mBluetoothGatt == null) {
             return;
@@ -584,6 +618,8 @@ public class BleEngine {
         void didUpdateBTMacAddressAndDeviceName(String btMacAddress, ArrayList<String> listName);
 
         void didUpdateSerialNumber(String serialNumber);
+
+        void didUpdateSku(String sku);
 
         void didUpdateAirplayHomeStatus(int airplayHomeStatus);
 

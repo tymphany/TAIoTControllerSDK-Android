@@ -22,7 +22,13 @@ public class Constant {
     public static final String DeviceInfoServiceUUID = "0000180a-0000-1000-8000-00805f9b34fb";
     public static final String DeviceInfoFirmwareVersionCharacteristicUUID = "00002a26-0000-1000-8000-00805f9b34fb";
     public static final String DeviceInfoSerialNumberCharacteristicUUID = "00002a25-0000-1000-8000-00805f9b34fb";
+    public static final String DeviceInfoSkuCharacteristicUUID = "00002a25-0000-1000-8000-00805f9b34fb";
 
     public static final String BatteryInfoServiceUUID = "0000180f-0000-1000-8000-00805f9b34fb";
     public static final String BatteryLevelCharacteristicUUID = "00002a19-0000-1000-8000-00805f9b34fb";
+
+    enum InfoType{
+        SerialNumber,Sku
+    }
+
 }

@@ -5,6 +5,7 @@ public class TASystem {
     private String deviceName;
     private String deviceAddress;
     private String serialNumber;
+    private String sku;
     private int sourceType;
 
     public String getDeviceName() {
@@ -39,6 +40,14 @@ public class TASystem {
         return sourceType;
     }
 
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (TASystem.class.isInstance(o)
@@ -54,6 +63,7 @@ public class TASystem {
                 "deviceName='" + deviceName + '\'' +
                 ", deviceAddress='" + deviceAddress + '\'' +
                 ", serialNumber='" + serialNumber + '\'' +
+                ", sku='" + sku + '\'' +
                 ", sourceType=" + sourceType +
                 '}';
     }
