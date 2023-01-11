@@ -36,7 +36,7 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
   private final List<onZigbeeListener> mZigbeeListeners = new ArrayList<>();
   private final List<OnBluetoothListener> mOnBluetoothListeners = new ArrayList<>();
   private final List<onIoTDeviceListener> mIoTDeviceListeners = new ArrayList<>();
-  private final List<onStereoListener> mStereoListeners = new ArrayList<>();
+//  private final List<onStereoListener> mStereoListeners = new ArrayList<>();
   private final List<onOtaListener> mOtaListeners = new ArrayList<>();
   private final List<onSourceSwitchListener> mSourceSwitchListeners = new ArrayList<>();
   private final List<onAirplayListener> mAirplayListeners = new ArrayList<>();
@@ -87,21 +87,21 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         }
     }
 
-    public void addStereoListener(onStereoListener listener) {
-        synchronized (mStereoListeners) {
-            if (listener != null && !mStereoListeners.contains(listener)) {
-                mStereoListeners.add(listener);
-            }
-        }
-    }
-
-    public void removeStereoListener(onStereoListener listener) {
-        synchronized (mStereoListeners) {
-            if (listener != null) {
-                mStereoListeners.remove(listener);
-            }
-        }
-    }
+//    public void addStereoListener(onStereoListener listener) {
+//        synchronized (mStereoListeners) {
+//            if (listener != null && !mStereoListeners.contains(listener)) {
+//                mStereoListeners.add(listener);
+//            }
+//        }
+//    }
+//
+//    public void removeStereoListener(onStereoListener listener) {
+//        synchronized (mStereoListeners) {
+//            if (listener != null) {
+//                mStereoListeners.remove(listener);
+//            }
+//        }
+//    }
 
     public void addOtaListener(onOtaListener listener) {
         synchronized (mOtaListeners) {
@@ -268,24 +268,24 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
       void deviceDidChangeLedAnimation(IoTDevice device, int ledAnimation);
 	}
 
-	public interface onStereoListener{
-        /**
-         * If stereo state is changed or you change success via setStereo method, this method will call back
-         *
-         * @param device
-         *              The IoT device for which the state has changed.
-         * @param stereoAttr
-         *              The stereoAttr contain groupid and stereo type (Type value 0 to 2 )
-         *
-         *              when groupId and stereo type both are 0 , that is unPair status
-         *
-         *              type value 0 is stereo
-         *              type value 1 is left
-         *              type value 2 is right
-         */
-
-        void deviceDidChangeStereoState(IoTDevice device, StereoAttr stereoAttr);
-    }
+//	public interface onStereoListener{
+//        /**
+//         * If stereo state is changed or you change success via setStereo method, this method will call back
+//         *
+//         * @param device
+//         *              The IoT device for which the state has changed.
+//         * @param stereoAttr
+//         *              The stereoAttr contain groupid and stereo type (Type value 0 to 2 )
+//         *
+//         *              when groupId and stereo type both are 0 , that is unPair status
+//         *
+//         *              type value 0 is stereo
+//         *              type value 1 is left
+//         *              type value 2 is right
+//         */
+//
+//        void deviceDidChangeStereoState(IoTDevice device, StereoAttr stereoAttr);
+//    }
 
     public interface onMusicSourceListener{
         /**
@@ -478,6 +478,7 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
      */
   public void setDeviceName(IoTDevice device, String name, IoTCompletionCallback callback) {
       device.setDeviceName(name, callback);
+
   }
 
     /**
@@ -534,9 +535,10 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
      * @param callback  Call back if you change success
      */
 
-  public void setStereo(IoTDevice device, int groupId, int stereoType,int masterVerify,String masterSerialNumber,int groupVerify, String groupName, IoTCompletionCallback callback){
-        device.setStereo(groupId,stereoType,masterVerify,masterSerialNumber, groupVerify, groupName, callback);
-  }
+//  public void setStereo(IoTDevice device, int groupId, int stereoType,int masterVerify,String masterSerialNumber,int groupVerify, String groupName, IoTCompletionCallback callback){
+//        device.setStereo(groupId,stereoType,masterVerify,masterSerialNumber, groupVerify, groupName, callback);
+//
+//  }
 
     /**
      *  Asynchronously dispatch request to download firmware of the speaker.
@@ -651,30 +653,31 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
         return ioTDevice.getLedAnimation();
     }
 
-    public int getStereoType(IoTDevice ioTDevice){
-        return ioTDevice.getStereoType();
-    }
-
-    public int getStereoGroupId(IoTDevice ioTDevice){
-      return  ioTDevice.getStereoGroupId();
-    }
-
-
-    public int getStereoMasterVerify(IoTDevice ioTDevice){
-        return  ioTDevice.getStereoMasterVerify();
-    }
-
-    public String getStereoMasterSerialNumber(IoTDevice ioTDevice){
-        return  ioTDevice.getStereoMasterSerialNumber();
-    }
-
-    public int getStereoGroupVerify(IoTDevice ioTDevice) {
-        return ioTDevice.getStereoGroupVerify();
-    }
-
-    public String getStereoGroupName(IoTDevice ioTDevice) {
-        return ioTDevice.getStereoGroupName();
-    }
+//    public int getStereoType(IoTDevice ioTDevice){
+//        return ioTDevice.getStereoType();
+//    }
+//
+//    public int getStereoGroupId(IoTDevice ioTDevice){
+//      return  ioTDevice.getStereoGroupId();
+//    }
+//
+//
+//    public int getStereoMasterVerify(IoTDevice ioTDevice){
+//        return  ioTDevice.getStereoMasterVerify();
+//        ioTDevice.
+//    }
+//
+//    public String getStereoMasterSerialNumber(IoTDevice ioTDevice){
+//        return  ioTDevice.getStereoMasterSerialNumber();
+//    }
+//
+//    public int getStereoGroupVerify(IoTDevice ioTDevice) {
+//        return ioTDevice.getStereoGroupVerify();
+//    }
+//
+//    public String getStereoGroupName(IoTDevice ioTDevice) {
+//        return ioTDevice.getStereoGroupName();
+//    }
     public String getFrimwareVersion(IoTDevice ioTDevice){
       return  ioTDevice.getFirmwareVersion();
     }
@@ -764,14 +767,14 @@ public class IoTSysManager implements IoTAppListener, IoTSysUpdatesDelegate {
   }
 
 
-    @Override
-    public void deviceDidChangeStereoState(IoTDevice device, StereoAttr stereoAttr) {
-        synchronized (mStereoListeners) {
-            for (onStereoListener listener : mStereoListeners) {
-                listener.deviceDidChangeStereoState(device,stereoAttr);
-            }
-        }
-    }
+//    @Override
+//    public void deviceDidChangeStereoState(IoTDevice device, StereoAttr stereoAttr) {
+//        synchronized (mStereoListeners) {
+//            for (onStereoListener listener : mStereoListeners) {
+//                listener.deviceDidChangeStereoState(device,stereoAttr);
+//            }
+//        }
+//    }
 
 
     @Override
